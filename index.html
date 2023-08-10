@@ -4,7 +4,12 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <link href="style.css" rel="stylesheet">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link
+        href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:ital,wght@0,100;0,400;0,700;1,400&family=Roboto:wght@100;400;700&display=swap"
+        rel="stylesheet">
+    <link href="css/style.css" rel="stylesheet">
     <title>kamisou.dev</title>
 </head>
 
@@ -16,24 +21,24 @@
         <nav class="nav">
             <ul class="nav__link-list">
                 <li class="nav__link-list-item">
-                    <a class="nav__link-list-link" data-content="about">sobre</a>
+                    <a class="link" data-content="about">sobre</a>
                 </li>
                 <li class="nav__link-list-item">
-                    <a class="nav__link-list-link" data-content="contact">contato</a>
+                    <a class="link" data-content="contact">contato</a>
                 </li>
                 <li class="nav__link-list-item">
-                    <a class="nav__link-list-link" data-content="projects">projetos</a>
+                    <a class="link" data-content="projects">projetos</a>
                 </li>
             </ul>
             <!-- <hr class="link-divider"> -->
             <!-- <ul class="nav__link-list">
                 <li class="nav__link-list-item">
-                    <a class="nav__link-list-link" href="https://gitlab.com/Kamisou">
+                    <a class="link" href="https://gitlab.com/Kamisou">
                         Gitlab
                     </a>
                 </li>
                 <li class="nav__link-list-item">
-                    <a class="nav__link-list-link" href="https://github.com/kamisou">
+                    <a class="link" href="https://github.com/kamisou">
                         Github
                     </a>
                 </li>
@@ -45,11 +50,12 @@
                 <header>
                     <h3>Sobre</h3>
                 </header>
-                <p class="paragraph">Sou formado em Engenharia de Software desde 2022, desenvolvo aplicações mobile e
+                <p class="paragraph">
+                    Sou formado em Engenharia de Software desde 2022. Desenvolvo aplicações mobile e
                     APIs.
                     Trabalho
                     desde 2021 como
-                    desenvolvedor na empresa <a class="text-link" href="https://www.websix.com.br/"
+                    desenvolvedor na empresa <a class="link" href="https://www.websix.com.br/"
                         target="_blank">Websix</a> e
                     desenvolvi projetos
                     freelance.
@@ -77,13 +83,36 @@
             <div class="main__content" data-content="projects" hidden>
                 <header>
                     <h3>Projetos</h3>
-                    <p class="paragraph">WIP</p>
+                    <p class="paragraph">
+                        Abaixo estão alguns projetos que desenvolvi.<br>
+                        (a lista ainda está crescendo!)
+                    </p>
+                    <div class="projects__item">
+                        <a class="link" href="https://github.com/kamisou/minha-leitura-app" target="_blank">
+                            <img class="projects__app-icon" src="img/minha-leitura.png">
+                            Minha Leitura
+                        </a>
+                        <p class="paragraph">
+                            Aplicativo para recomendação de livros e acompanhamento de hábitos de
+                            leitura.
+                        </p>
+                    </div>
+                    <div class="projects__item">
+                        <a class="link" href="https://github.com/kamisou/app-basso-hoogerheide" target="_blank">
+                            <img class="projects__app-icon" src="img/basso-hoogerheide.png">
+                            Basso & Hoogerheide
+                        </a>
+                        <p class="paragraph">
+                            Aplicativo para organização de pastas para escritório de advocacia
+                            (descontinuado).
+                        </p>
+                    </div>
                 </header>
             </div>
         </main>
     </div>
-    <script src="content-switcher.js"></script>
-    <script src="blink-cursor.js"></script>
+    <script src="js/content-switcher.js"></script>
+    <script src="js/blink-cursor.js"></script>
 </body>
 
 </html>

@@ -1,8 +1,14 @@
 const content = document.querySelector('#content');
-const links = document.querySelectorAll('.nav__link-list-link');
+const links = document.querySelectorAll('.nav__link-list .link');
 
 for (const link of links) {
-    link.addEventListener('mouseup', _ => setContent(link.dataset.content));
+    link.addEventListener('mouseup', ev => {
+        if (ev.button !== 0) {
+            return;
+        }
+
+        setContent(link.dataset.content);
+    });
 }
 
 function setContent(page) {
