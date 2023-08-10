@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html lang="pt">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link href="style.css" rel="stylesheet">
+    <title>kamisou.dev</title>
+</head>
+
+<body>
+    <div class="wrap">
+        <header class="header">
+            <h2 id="title" class="header__title">kamisou.dev</h2>
+        </header>
+        <nav class="nav">
+            <ul class="nav__link-list">
+                <li class="nav__link-list-item">
+                    <a class="nav__link-list-link" data-content="about">sobre</a>
+                </li>
+                <li class="nav__link-list-item">
+                    <a class="nav__link-list-link" data-content="contact">contato</a>
+                </li>
+                <li class="nav__link-list-item">
+                    <a class="nav__link-list-link" data-content="projects">projetos</a>
+                </li>
+            </ul>
+            <!-- <hr class="link-divider"> -->
+            <!-- <ul class="nav__link-list">
+                <li class="nav__link-list-item">
+                    <a class="nav__link-list-link" href="https://gitlab.com/Kamisou">
+                        Gitlab
+                    </a>
+                </li>
+                <li class="nav__link-list-item">
+                    <a class="nav__link-list-link" href="https://github.com/kamisou">
+                        Github
+                    </a>
+                </li>
+            </ul> -->
+        </nav>
+        <main id="content" class="main">
+            <!-- sobre -->
+            <div class="main__content" data-content="about" hidden>
+                <header>
+                    <h3>Sobre</h3>
+                </header>
+                <p class="paragraph">Sou formado em Engenharia de Software desde 2022, desenvolvo aplicações mobile e
+                    APIs.
+                    Trabalho
+                    desde 2021 como
+                    desenvolvedor na empresa <a class="text-link" href="https://www.websix.com.br/"
+                        target="_blank">Websix</a> e
+                    desenvolvi projetos
+                    freelance.
+                </p>
+            </div>
+            <!-- contato -->
+            <div class="main__content" data-content="contact" hidden>
+                <header>
+                    <h3>Contato</h3>
+                    <p class="paragraph">Para dúvidas, pedidos e propostas utilize o formulário abaixo.</p>
+                </header>
+                <form class="form" method="get" action="mailto:kamisou.dev@gmail.com">
+                    <label class="form__label" for="subject">Assunto
+                        <input type="text" id="subject" name="subject" class="text-input"
+                            placeholder="Insira o assunto..." required autocomplete="off">
+                    </label>
+                    <label class="form__label" for="body">Mensagem
+                        <textarea id="body" name="body" class="text-input" placeholder="Insira sua mensagem..." rows="5"
+                            required autocomplete="off"></textarea>
+                    </label>
+                    <input id="submit-email" class="button button--submit" type="submit" value="Enviar">
+                </form>
+            </div>
+            <!-- projetos -->
+            <div class="main__content" data-content="projects" hidden>
+                <header>
+                    <h3>Projetos</h3>
+                    <p class="paragraph">WIP</p>
+                </header>
+            </div>
+        </main>
+    </div>
+    <script src="content-switcher.js"></script>
+    <script src="blink-cursor.js"></script>
+</body>
+
+</html>
