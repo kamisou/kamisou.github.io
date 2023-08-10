@@ -65,19 +65,11 @@
             <div class="main__content" data-content="contact" hidden>
                 <header>
                     <h3>Contato</h3>
-                    <p class="paragraph">Para dúvidas, pedidos e propostas utilize o formulário abaixo.</p>
+                    <p class="paragraph">
+                        Para dúvidas, pedidos e propostas utilize o e-mail abaixo. (clique para abrir)
+                    </p>
                 </header>
-                <form class="form" method="get" action="mailto:kamisou.dev@gmail.com">
-                    <label class="form__label" for="subject">Assunto
-                        <input type="text" id="subject" name="subject" class="text-input"
-                            placeholder="Insira o assunto..." required autocomplete="off">
-                    </label>
-                    <label class="form__label" for="body">Mensagem
-                        <textarea id="body" name="body" class="text-input" placeholder="Insira sua mensagem..." rows="5"
-                            required autocomplete="off"></textarea>
-                    </label>
-                    <input id="submit-email" class="button button--submit" type="submit" value="Enviar">
-                </form>
+                <canvas id="email-canvas" class="email-canvas" width="0" height="16"></canvas>
             </div>
             <!-- projetos -->
             <div class="main__content" data-content="projects" hidden>
@@ -111,8 +103,9 @@
             </div>
         </main>
     </div>
-    <script src="js/content-switcher.js"></script>
     <script src="js/blink-cursor.js"></script>
+    <script src="js/content-switcher.js"></script>
+    <script src="js/email.js"></script>
 </body>
 
 </html>

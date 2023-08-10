@@ -96,52 +96,8 @@ body {
     animation: 500ms ease-in-out fadein;
 }
 
-.form {
-    align-items: stretch;
-    display: flex;
-    flex-direction: column;
-    row-gap: 1em;
-}
-
-.form__label {
-    display: flex;
-    flex-direction: column;
-    row-gap: 0.4em;
-}
-
-.text-input {
-    background-color: var(--background-color);
-    border: 1px solid var(--primary-color);
-    color: var(--primary-color);
-    font-family: var(--font-family);
-    font-size: 1em;
-    outline: none;
-    padding: 1em;
-    resize: none;
-}
-
-.text-input::placeholder {
-    color: var(--secondary-color);
-}
-
-.button {
-    background-color: var(--background-color);
-    border: 1px solid var(--primary-color);
-    color: var(--primary-color);
-    font-family: var(--font-family);
-    padding: 0.8em;
-}
-
-.button--submit {
-    background-color: var(--primary-color);
-    color: var(--on-primary-color);
+.email-canvas {
     cursor: pointer;
-    margin: 1em 0;
-}
-
-.button--submit:active {
-    background-color: var(--secondary-color);
-    color: var(--on-secondary-color);
 }
 
 .projects__item {
