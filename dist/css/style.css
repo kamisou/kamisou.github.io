@@ -1,20 +1,4 @@
-:root {
-    --background-color: #000000;
-    --primary-color: #ffffff;
-    --on-primary-color: #000000;
-    --secondary-color: #606060;
-    --on-secondary-color: #ffffff;
-
-    --font-family: 'IBM Plex Mono', monospace, sans-serif;
-}
-
-.light-mode {
-    --background-color: #ffffff;
-    --primary-color: #000000;
-    --on-primary-color: #ffffff;
-    --secondary-color: #909090;
-    --on-secondary-color: #000000;
-}
+@import url(variables.css);
 
 body {
     align-items: center;
@@ -23,12 +7,21 @@ body {
     display: flex;
     flex-direction: column;
     font-family: var(--font-family);
+    height: 100vh;
+    margin: 0;
 }
 
 .theme-toggle {
-    align-self: flex-end;
     cursor: pointer;
     user-select: none;
+    position: fixed;
+    top: 1em;
+    right: 1em;
+}
+
+.particle-canvas {
+    position: fixed;
+    z-index: -10;
 }
 
 .wrap {

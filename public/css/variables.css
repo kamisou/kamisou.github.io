@@ -1,0 +1,17 @@
+:root {
+    --background-color: #000000;
+    --primary-color: #ffffff;
+    --on-primary-color: #000000;
+    --secondary-color: #606060;
+    --on-secondary-color: #ffffff;
+
+    --font-family: 'IBM Plex Mono', monospace, sans-serif;
+}
+
+.light-mode {
+    --background-color: #ffffff;
+    --primary-color: #000000;
+    --on-primary-color: #ffffff;
+    --secondary-color: #404040;
+    --on-secondary-color: #000000;
+}
