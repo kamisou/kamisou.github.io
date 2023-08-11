@@ -1,9 +1,14 @@
-const title = document.querySelector('#title');
+; (function () {
+    const title = document.querySelector('#title');
+    let visible = false;
 
-setInterval(() => {
-    if (title.innerText.endsWith('|')) {
-        title.innerText = title.innerText.substr(0, title.innerText.length - 1);
-    } else {
-        title.innerText = `${title.innerText}|`;
-    }
-}, 500);
+    setInterval(() => {
+        if (visible) {
+            title.innerText = title.innerText.substr(0, title.innerText.length - 1);
+        } else {
+            title.innerText = `${title.innerText}|`;
+        }
+
+        visible = !visible;
+    }, 500);
+})()
