@@ -1,7 +1,7 @@
-import ThemeModeSwitch from "./ThemeModeSwitch";
-import BlinkingCursor from "./BlinkingCursor";
-import ContentSwitcher from "./ContentSwitcher";
-import EmailObfuscator from "./EmailObfuscator";
+import ThemeModeSwitch from "./src/ThemeModeSwitch";
+import BlinkingCursor from "./src/BlinkingCursor";
+import ContentSwitcher from "./src/ContentSwitcher";
+import EmailObfuscator from "./src/EmailObfuscator";
 
 const root = document.querySelector<HTMLElement>(':root')!;
 const toggleButton = document.querySelector<HTMLElement>('#theme-toggle')!;
