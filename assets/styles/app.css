@@ -101,6 +101,23 @@ body {
     animation: 500ms ease-in-out fadein;
 }
 
+.about__me-img {
+    border-radius: 100%;
+    float: left;
+    object-fit: cover;
+    height: 10em;
+    margin: 0 1.5em 0.8em 0;
+    width: 10em;
+}
+
+@media (max-width: 600px) {
+    .about__me-img {
+        float: none;
+        display: block;
+        margin: 0 auto 1.2em auto;
+    }
+}
+
 .email {
     cursor: pointer;
 }
