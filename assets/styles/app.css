@@ -1,3 +1,4 @@
+@import url(animations.css);
 @import url(variables.css);
 
 body {
@@ -85,20 +86,12 @@ body {
     padding: 2em;
 }
 
-@keyframes fadein {
-    from {
-        opacity: 0;
-        transform: translateX(-2em);
-    }
-
-    to {
-        opacity: 1;
-        transform: translateX(0);
-    }
-}
-
 .main__content {
     animation: 500ms ease-in-out fadein;
+}
+
+.main__section {
+    margin-bottom: 3em;
 }
 
 .about__me-img {
@@ -116,6 +109,32 @@ body {
         display: block;
         margin: 0 auto 1.2em auto;
     }
+}
+
+.competence {
+    align-items: center;
+    column-gap: 1em;
+    display: flex;
+    flex-direction: row;
+    margin: 1em 0;
+}
+
+.competence__label {
+    width: 8em;
+}
+
+.meter {
+    border: 1px solid var(--primary-color);
+    border-radius: 8px;
+    flex: 1;
+    height: 0.5em;
+}
+
+.meter__fill {
+    animation: horexpand 500ms ease-in-out;
+    background-color: var(--primary-color);
+    border-radius: 8px;
+    height: 100%;
 }
 
 .email {
