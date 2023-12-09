@@ -1,0 +1,37 @@
+[
+    {
+        "link": "https://play.google.com/store/apps/details?id=br.com.websix.indicacoes",
+        "icon": "icons/indique-me.png",
+        "name": "Indique Me",
+        "description": "Realização e resgate de comissões por meio de indicações de compra."
+    },
+    {
+        "link": "https://github.com/kamisou/minha-leitura-app",
+        "icon": "icons/minha-leitura.png",
+        "name": "Minha Leitura",
+        "description": "Recomendação de livros e acompanhamento de hábitos de leitura."
+    },
+    {
+        "link": "https://play.google.com/store/apps/details?id=br.com.websix.ibvarejo",
+        "icon": "icons/ib-varejo.jpg",
+        "name": "Indique Me",
+        "description": "Plataforma de cursos diversos de venda em varejo."
+    },
+    {
+        "link": "https://github.com/kamisou/app-basso-hoogerheide",
+        "icon": "icons/basso-hoogerheide.png",
+        "name": "Basso & Hoogerheide",
+        "description": "Organização de pastas e clientes para escritório de advocacia (descontinuado)."
+    },
+    {
+        "link": "https://gitlab.com/Kamisou/app-gtop",
+        "icon": "icons/gtop.png",
+        "name": "GTOP Catálogos",
+        "description": "Projeto universitário para venda de produtos por catálogos porta a porta."
+    },
+    {
+        "link": "https://github.com/kamisou/search-scoop",
+        "name": "Search Scoop",
+        "description": "Um script PowerShell simples para buscar pacotes no gerenciador de pacotes Scoop de forma rápida usando expressões regulares."
+    }
+]

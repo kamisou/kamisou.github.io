@@ -1,0 +1,34 @@
+[
+    {
+        "name": "Dart",
+        "value": 1.0
+    },
+    {
+        "name": "Flutter",
+        "value": 1.0
+    },
+    {
+        "name": "PHP",
+        "value": 0.8
+    },
+    {
+        "name": "Typescript",
+        "value": 0.8
+    },
+    {
+        "name": "Linux",
+        "value": 0.6
+    },
+    {
+        "name": "Git",
+        "value": 0.6
+    },
+    {
+        "name": "Docker",
+        "value": 0.6
+    },
+    {
+        "name": "Powershell",
+        "value": 0.5
+    }
+]
