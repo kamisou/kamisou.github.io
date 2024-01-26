@@ -11,20 +11,20 @@ class EmailObfuscator {
         }
 
         if (this.visible) {
-            window.location.href = `mailto:${this.em()}`;
+            window.location.href = `mailto:${this.getEmail()}`;
         } else {
-            this.email.innerText = this.em();
+            this.email.innerText = this.getEmail();
             this.visible = true;
         }
     }
 
-    private em(): string {
-        return [
-            ['m', 'o', 'c', '.'],
-            ['l', 'i', 'a', 'm', 'g', '@'],
-            ['v', 'e', 'd', '.'],
-            ['u', 'o', 's', 'i', 'm', 'a', 'k'],
-        ].reverse().map(v => v.reverse().join('')).join('');
+    private getEmail(): string {
+        return atob(
+            't92YuwWah12ZAZXZk5SdvNXatF2a'
+            .split('')
+            .reverse()
+            .join('')
+        );
     }
 }
 
