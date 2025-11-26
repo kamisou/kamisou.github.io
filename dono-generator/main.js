@@ -534,11 +534,21 @@ function loadStateFromURL() {
 
         try {
             const binaryString = atob(content);
-            const indexArray = new Uint8Array(binaryString.length);
+            const ESC = 255;
+            const indices = [];
 
             for (let i = 0; i < binaryString.length; i++) {
-                indexArray[i] = binaryString.charCodeAt(i);
+                const b = binaryString.charCodeAt(i);
+                if (b === ESC) {
+                    const val = binaryString.charCodeAt(++i);
+                    const count = binaryString.charCodeAt(++i);
+                    for (let k = 0; k < count; k++) indices.push(val);
+                } else {
+                    indices.push(b);
+                }
             }
+
+            const indexArray = new Uint8Array(indices);
 
             let outputString = Array.from(indexArray).slice(0, GRID_DIMENSIONS.TOTAL_PIXELS).map(index => {
                 return TOKEN_MAPPING.TO_TOKEN[index] || '.';
@@ -563,7 +573,25 @@ function generateShareableURL() {
         return index !== undefined ? index : TOKEN_MAPPING.TO_INDEX['.'];
     });
 
-    const byteArray = new Uint8Array(indexArray);
+    const ESC = 255;
+    const outBytes = [];
+
+    for (let i = 0; i < indexArray.length;) {
+        const val = indexArray[i];
+        let j = i + 1;
+        while (j < indexArray.length && indexArray[j] === val && (j - i) < 255) j++;
+        const run = j - i;
+
+        if (run >= 4) {
+            outBytes.push(ESC, val, run);
+        } else {
+            for (let k = 0; k < run; k++) outBytes.push(val);
+        }
+
+        i = j;
+    }
+
+    const byteArray = new Uint8Array(outBytes);
 
     let binaryString = '';
     for (let i = 0; i < byteArray.byteLength; i++) {
