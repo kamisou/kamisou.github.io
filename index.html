@@ -209,12 +209,15 @@
 
     const colorLiterals = Object.keys(REVERSE_COLOR_MAP).filter(k => k.startsWith('{'));
 
-    // --- Compression/Decompression Maps (63 unique tokens -> 6 bits) ---
+    // --- Compression/Decompression Maps (64 unique tokens -> 6 bits) ---
+    // Capacidade total: 6 bits = 64 tokens (Índices 0-63).
+    // O conjunto de caracteres da imagem contém 58 caracteres + 8 literais de cor = 66 tokens.
+    // Para manter a compressão de 6 bits, 2 caracteres foram removidos do conjunto de 58 (o '+' e o '@').
     const TOKEN_TO_INDEX = {};
     const INDEX_TO_TOKEN = [];
     let idx = 0;
 
-    // 1. Color Literals (8) - Ordered for a stable and predictable map
+    // 1. Literais de Cor (8) - Mapeamento de 4 caracteres
     const orderedColorLiterals = ['{71}', '{70}', '{63}', '{64}', '{65}', '{66}', '{67}', '{68}'];
     orderedColorLiterals.forEach(token => {
         TOKEN_TO_INDEX[token] = idx;
@@ -222,29 +225,31 @@
         idx++;
     }); 
 
-    // 2. Allowed 1-char tokens (55)
-    // ASCII Range 32-59 (Space, !, ", #, $, %, &, ', (, ), *, +, ,, -, ., /, 0-9, :, ;) (28 tokens)
-    for (let charCode = 32; charCode <= 59; charCode++) {
-        const token = String.fromCharCode(charCode);
+    // 2. Caracteres Permitidos de 1 Caractere (56) - Baseado na imagem, menos '+' e '@'.
+    const ALLOWED_CHARS_56 = [
+        // Espaço
+        ' ', 
+        // Símbolos: ! # $ % & ( ) - = ; : ' " , . ? (17)
+        '!', '#', '$', '%', '&', '(', ')', '-', '=', ';', ':', '\'', '"', ',', '.', '?',
+        // Números e Barra: / 0 1 2 3 4 5 6 7 8 9 (11)
+        '/', '0', '1', '2', '3', '4', '5', '6', '7', '8', '9',
+        // Letras A-Z (26)
+        'A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K', 'L', 'M', 'N', 'O', 'P', 'Q', 'R', 'S', 'T', 'U', 'V', 'W', 'X', 'Y', 'Z',
+        // Símbolo de Grau '°' (1)
+        String.fromCharCode(176) // CharCode 176
+    ];
+    
+    const ALLOWED_CHARS_SET = new Set(ALLOWED_CHARS_56);
+    // Adicionar letras minúsculas ao Set para validação de entrada, pois elas serão convertidas para maiúsculas
+    ALLOWED_CHARS_56.filter(char => char.match(/[A-Z]/)).map(char => char.toLowerCase()).forEach(char => ALLOWED_CHARS_SET.add(char));
+
+
+    ALLOWED_CHARS_56.forEach(token => {
         TOKEN_TO_INDEX[token] = idx;
         INDEX_TO_TOKEN[idx] = token;
         idx++;
-    }
-
-    // ASCII Range 65-90 (A-Z) (26 tokens)
-    for (let charCode = 65; charCode <= 90; charCode++) {
-        const token = String.fromCharCode(charCode);
-        TOKEN_TO_INDEX[token] = idx;
-        INDEX_TO_TOKEN[idx] = token;
-        idx++;
-    }
-
-    // Degree Symbol (°) (1 token) - CharCode 176
-    const degreeSymbol = String.fromCharCode(176);
-    TOKEN_TO_INDEX[degreeSymbol] = idx;
-    INDEX_TO_TOKEN[idx] = degreeSymbol;
-    idx++; 
-    // Total idx should be 63 (0-62)
+    }); 
+    // idx é 64 (0-63)
 
     // --- DOM Elements ---
     const pixelGridEl = document.getElementById('pixelGrid');
@@ -282,7 +287,15 @@
             }
             
             // Validation: Map any non-allowed single char to Black {71} if it wasn't a literal
+            // O `TOKEN_TO_INDEX` agora contém apenas os caracteres válidos de 1 char (56) ou os literais de cor (8).
             if (currentToken.length === 1 && !TOKEN_TO_INDEX[currentToken]) {
+                // Exceção: O caractere '.' é um token de 1 char, mas também está em REVERSE_COLOR_MAP. 
+                // Se for um '.' ele deve ser tratado como um caractere de 1 char válido aqui, mesmo que não tenha um literal de cor.
+                // Mas, se ele não está em TOKEN_TO_INDEX, significa que é um caractere inválido (não é um literal de cor, e não está nos 56 permitidos).
+                
+                // Nota: O ponto '.' é um dos 56 caracteres permitidos.
+                
+                // Se for um caractere de 1 char não permitido, ele vira o literal de cor preta.
                 currentToken = COLOR_MAP[DEFAULT_COLOR]; // '{71}'
             }
             
@@ -429,26 +442,20 @@
         return token;
     }
     
-    // Function to clean and validate input character
+    // Function to clean and validate input character based on the new restricted set (56 tokens + lowercase conversion)
     function getCleanChar(rawChar) {
         if (!rawChar || rawChar.length !== 1) return null;
         
-        const char = rawChar[0];
-        const charCode = char.charCodeAt(0);
+        let char = rawChar[0];
 
-        // Allowed literal characters (includes space: 32)
-        const isLiteralAllowed = (charCode >= 32 && charCode <= 59) || 
-                                 (charCode >= 65 && charCode <= 90) || 
-                                 (charCode >= 97 && charCode <= 122) || 
-                                  charCode === 176; // Degree symbol
-
-        if (isLiteralAllowed) {
-            // Uppercase lowercase letters
-            if (charCode >= 97 && charCode <= 122) {
-                return char.toUpperCase(); 
-            } else {
-                return char;
-            }
+        // 1. Converter para maiúscula se for uma letra minúscula
+        if (char >= 'a' && char <= 'z') {
+            char = char.toUpperCase();
+        }
+        
+        // 2. Verificar se o caractere resultante (ou original) está no nosso conjunto de caracteres permitidos.
+        if (ALLOWED_CHARS_SET.has(char)) {
+            return char;
         }
         
         return null;
