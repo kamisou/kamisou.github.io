@@ -15,6 +15,11 @@
             align-items: flex-start;
             min-height: 100vh;
             padding: 20px;
+            /* Prevents text highlighting during drag actions */
+            user-select: none; 
+            -webkit-user-select: none;
+            -moz-user-select: none;
+            -ms-user-select: none;
         }
 
         .pixel-cell {
@@ -40,6 +45,12 @@
         .pixel-cell.typing-cursor {
             border: 3px solid #22d3ee;
             box-shadow: 0 0 10px rgba(34, 211, 238, 0.5);
+        }
+
+        /* NEW: Highlight for sequential spaces */
+        .sequential-space-highlight {
+            border: 3px solid #ef4444 !important; /* Tailwind red-500 */
+            box-shadow: 0 0 8px rgba(239, 68, 68, 0.7);
         }
 
         .color-option {
@@ -118,15 +129,22 @@
     
     <div class="p-4 bg-[#3b3e47] rounded-lg">
         <h2 class="text-xl font-semibold mb-3">Mapped Character String (Output Only)</h2>
-        <textarea id="outputString" class="w-full p-3 rounded-lg text-sm text-cyan-300" disabled></textarea>
-        <div id="lengthWarning" class="mt-2 text-red-400 text-sm text-center font-semibold" style="display:none;"></div>
+        <textarea id="outputString" class="w-full p-3 rounded-lg text-sm text-cyan-300" readonly></textarea>
         
-        <div class="flex space-x-4 mt-3">
-            <button onclick="copyOutput()" class="w-1/2 bg-cyan-600 hover:bg-cyan-700 text-white font-bold py-2 px-4 rounded-lg transition duration-150">
+        <!-- Warning Area -->
+        <div id="lengthWarning" class="mt-2 text-red-400 text-sm text-center font-semibold" style="display:none;"></div>
+        <!-- Sequential space warning in red -->
+        <div id="spaceWarning" class="mt-2 text-red-400 text-sm text-center font-semibold" style="display:none;"></div>
+
+        <div class="flex space-x-2 mt-3">
+            <button onclick="copyOutput()" class="w-1/3 bg-cyan-600 hover:bg-cyan-700 text-white font-bold py-2 px-4 rounded-lg transition duration-150">
                 Copy String
             </button>
-            <button onclick="replaceBlackWithDot()" class="w-1/2 bg-gray-500 hover:bg-gray-600 text-white font-bold py-2 px-4 rounded-lg transition duration-150">
+            <button onclick="replaceBlackWithDot()" class="w-1/3 bg-gray-500 hover:bg-gray-600 text-white font-bold py-2 px-4 rounded-lg transition duration-150">
                 Replace Black with Dot (.)
+            </button>
+             <button onclick="clearGrid()" class="w-1/3 bg-red-600 hover:bg-red-700 text-white font-bold py-2 px-4 rounded-lg transition duration-150">
+                Clear Grid
             </button>
         </div>
 
@@ -179,7 +197,7 @@
     const PALETTE = Object.keys(COLOR_MAP); 
     const COLOR_NAMES = {
         '#f00': 'Red', '#f80': 'Orange', '#ff0': 'Yellow',
-        '#0f0': 'Green', '#00f': 'Blue', '#80f': 'Purple',
+        '#0f0': 'Green', '#00f': 'Blue', '080f': 'Purple',
         '#fff': 'White', '#000': 'Black'
     };
 
@@ -197,9 +215,11 @@
     const currentModeDisplayEl = document.querySelector('#currentModeDisplay span');
     const copyMessageEl = document.getElementById('copyMessage');
     const lengthWarningEl = document.getElementById('lengthWarning');
+    const spaceWarningEl = document.getElementById('spaceWarning'); 
     const textModeButtonEl = document.getElementById('textModeButton');
     const shareUrlInputEl = document.getElementById('shareUrlInput');
 
+    // Function to get the number of pixels currently represented by the output string
     function getCurrentTokenCount() {
         const inputString = outputStringEl.value;
         let charIndex = 0;
@@ -221,6 +241,7 @@
         return tokenCount;
     }
 
+    // Function to get the character start index in the string based on the pixel index
     function getCharIndexFromPixelIndex(pixelIndex) {
         const inputString = outputStringEl.value;
         let charIndex = 0;
@@ -242,6 +263,7 @@
         return charIndex;
     }
     
+    // Function to get the full token (char or color literal) for a given pixel index
     function getPixelToken(pixelIndex) {
         const inputString = outputStringEl.value;
         const charStart = getCharIndexFromPixelIndex(pixelIndex);
@@ -261,18 +283,21 @@
         return token;
     }
     
+    // Function to clean and validate input character
     function getCleanChar(rawChar) {
         if (!rawChar || rawChar.length !== 1) return null;
         
         const char = rawChar[0];
         const charCode = char.charCodeAt(0);
 
+        // Allowed literal characters (includes space: 32)
         const isLiteralAllowed = (charCode >= 32 && charCode <= 59) || 
                                  (charCode >= 65 && charCode <= 90) || 
                                  (charCode >= 97 && charCode <= 122) || 
-                                  charCode === 176;
+                                  charCode === 176; // Degree symbol
 
         if (isLiteralAllowed) {
+            // Uppercase lowercase letters
             if (charCode >= 97 && charCode <= 122) {
                 return char.toUpperCase(); 
             } else {
@@ -304,6 +329,7 @@
         const tokens = [];
         let i = 0;
 
+        // Tokenize the string (map characters/literals to pixels)
         while (i < inputString.length && tokens.length < TOTAL_PIXELS) {
             let currentToken = '';
             let tokenLength = 1;
@@ -330,6 +356,23 @@
             i += tokenLength;
         }
         
+        // Find indices of pixels that are part of a sequential space sequence
+        const sequentialSpacePixelIndices = [];
+        for (let j = 0; j < TOTAL_PIXELS; j++) {
+            const token = tokens[j];
+            
+            if (token === ' ') {
+                const prevToken = j > 0 ? tokens[j - 1] : null;
+                const nextToken = j < TOTAL_PIXELS - 1 ? tokens[j + 1] : null;
+                
+                // Check if the current token is a space AND is adjacent to another space
+                if (prevToken === ' ' || nextToken === ' ') {
+                    sequentialSpacePixelIndices.push(j);
+                }
+            }
+        }
+
+        // --- Grid Redrawing ---
         for (let j = 0; j < TOTAL_PIXELS; j++) {
             const token = tokens[j]; 
             const cell = pixelGridEl.children[j];
@@ -338,6 +381,9 @@
 
             let color = DEFAULT_COLOR; 
             let content = '';
+            
+            // 1. Remove old highlight
+            cell.classList.remove('sequential-space-highlight');
 
             if (token) {
                 content = token; 
@@ -358,14 +404,32 @@
             } else {
                 cell.textContent = '';
             }
+            
+            // 2. Apply new highlight if needed
+            if (sequentialSpacePixelIndices.includes(j)) {
+                cell.classList.add('sequential-space-highlight');
+            }
         }
         
+        // --- Warning Checks ---
+        
+        // 1. Length Warning
         const currentLength = inputString.length;
         if (currentLength > MAX_LENGTH) {
             lengthWarningEl.style.display = 'block';
             lengthWarningEl.textContent = `WARNING: The output string length (${currentLength} characters) exceeds the ${MAX_LENGTH} character limit.`;
         } else {
             lengthWarningEl.style.display = 'none';
+        }
+        
+        // 2. Sequential Space Warning (Global)
+        const hasSequentialSpaces = inputString.includes('  '); 
+        
+        if (hasSequentialSpaces) {
+            spaceWarningEl.style.display = 'block';
+            spaceWarningEl.textContent = "WARNING: Sequential spaces will be truncated into a single space in the donation.";
+        } else {
+            spaceWarningEl.style.display = 'none';
         }
         
         isParsing = false;
@@ -487,16 +551,7 @@
         if (cleanedChar !== null) {
             e.preventDefault();
             
-            if (cleanedChar === ' ') {
-                let prevIndex = (typingIndex - 1 + TOTAL_PIXELS) % TOTAL_PIXELS;
-                
-                const prevToken = getPixelToken(prevIndex); 
-
-                if (prevToken === ' ') {
-                    return;
-                }
-            }
-
+            // Allow sequential spaces
             updatePixel(typingIndex, cleanedChar); 
 
             typingIndex = (typingIndex + 1) % TOTAL_PIXELS;
@@ -543,6 +598,23 @@
             copyMessageEl.classList.remove('opacity-100');
             copyMessageEl.classList.add('opacity-0');
         }, 2500);
+    }
+    
+    function clearGrid() {
+        outputStringEl.value = COLOR_MAP[DEFAULT_COLOR].repeat(TOTAL_PIXELS);
+        typingIndex = 0;
+        isTextModeActive = false;
+        selectColor(DEFAULT_COLOR);
+        parseStringAndRedrawGrid();
+        
+        copyMessageEl.textContent = "Grid cleared to Black.";
+        copyMessageEl.classList.remove('opacity-0', 'text-red-400', 'text-cyan-400');
+        copyMessageEl.classList.add('opacity-100', 'text-cyan-300');
+        
+        setTimeout(() => {
+            copyMessageEl.classList.remove('opacity-100');
+            copyMessageEl.classList.add('opacity-0');
+        }, 2000);
     }
 
     function createGrid() {
@@ -655,10 +727,9 @@
         
         parseStringAndRedrawGrid(); 
 
-        outputStringEl.addEventListener('input', parseStringAndRedrawGrid);
-
         document.addEventListener('keydown', handleGlobalKeydown);
         
+        // Ensure drawing stops even if mouse is released outside the grid
         document.addEventListener('mouseup', () => {
             isDrawing = false;
         });
