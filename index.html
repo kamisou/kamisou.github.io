@@ -47,7 +47,7 @@
             box-shadow: 0 0 10px rgba(34, 211, 238, 0.5);
         }
 
-        /* NEW: Highlight for sequential spaces */
+        /* Highlight for sequential spaces */
         .sequential-space-highlight {
             border: 3px solid #ef4444 !important; /* Tailwind red-500 */
             box-shadow: 0 0 8px rgba(239, 68, 68, 0.7);
@@ -166,7 +166,7 @@
 <script>
     const COLS = 22;
     const ROWS = 4;
-    const TOTAL_PIXELS = COLS * ROWS;
+    const TOTAL_PIXELS = COLS * ROWS; // 88 pixels
     const DEFAULT_COLOR = '#000';
     const LITERAL_CHAR_COLOR = DEFAULT_COLOR; 
     const MAX_LENGTH = 255;
@@ -209,6 +209,44 @@
 
     const colorLiterals = Object.keys(REVERSE_COLOR_MAP).filter(k => k.startsWith('{'));
 
+    // --- Compression/Decompression Maps (63 unique tokens -> 6 bits) ---
+    const TOKEN_TO_INDEX = {};
+    const INDEX_TO_TOKEN = [];
+    let idx = 0;
+
+    // 1. Color Literals (8) - Ordered for a stable and predictable map
+    const orderedColorLiterals = ['{71}', '{70}', '{63}', '{64}', '{65}', '{66}', '{67}', '{68}'];
+    orderedColorLiterals.forEach(token => {
+        TOKEN_TO_INDEX[token] = idx;
+        INDEX_TO_TOKEN[idx] = token;
+        idx++;
+    }); 
+
+    // 2. Allowed 1-char tokens (55)
+    // ASCII Range 32-59 (Space, !, ", #, $, %, &, ', (, ), *, +, ,, -, ., /, 0-9, :, ;) (28 tokens)
+    for (let charCode = 32; charCode <= 59; charCode++) {
+        const token = String.fromCharCode(charCode);
+        TOKEN_TO_INDEX[token] = idx;
+        INDEX_TO_TOKEN[idx] = token;
+        idx++;
+    }
+
+    // ASCII Range 65-90 (A-Z) (26 tokens)
+    for (let charCode = 65; charCode <= 90; charCode++) {
+        const token = String.fromCharCode(charCode);
+        TOKEN_TO_INDEX[token] = idx;
+        INDEX_TO_TOKEN[idx] = token;
+        idx++;
+    }
+
+    // Degree Symbol (°) (1 token) - CharCode 176
+    const degreeSymbol = String.fromCharCode(176);
+    TOKEN_TO_INDEX[degreeSymbol] = idx;
+    INDEX_TO_TOKEN[idx] = degreeSymbol;
+    idx++; 
+    // Total idx should be 63 (0-62)
+
+    // --- DOM Elements ---
     const pixelGridEl = document.getElementById('pixelGrid');
     const colorPaletteEl = document.getElementById('colorPalette');
     const outputStringEl = document.getElementById('outputString');
@@ -219,26 +257,134 @@
     const textModeButtonEl = document.getElementById('textModeButton');
     const shareUrlInputEl = document.getElementById('shareUrlInput');
 
-    // Function to get the number of pixels currently represented by the output string
-    function getCurrentTokenCount() {
-        const inputString = outputStringEl.value;
-        let charIndex = 0;
-        let tokenCount = 0;
-        
-        while (charIndex < inputString.length && tokenCount < TOTAL_PIXELS) {
+    // Function to get the full array of tokens from the output string
+    function getAllTokens(inputString) {
+        const tokens = [];
+        let i = 0;
+
+        while (i < inputString.length && tokens.length < TOTAL_PIXELS) {
+            let currentToken = '';
             let tokenLength = 1;
 
-            if (inputString.substring(charIndex, charIndex + 1) === '{' && inputString.length >= charIndex + 4) {
-                const potentialLiteral = inputString.substring(charIndex, charIndex + 4);
+            // Check for 4-char color literals
+            if (inputString.substring(i, i + 1) === '{' && inputString.length >= i + 4) {
+                const potentialLiteral = inputString.substring(i, i + 4);
                 if (colorLiterals.includes(potentialLiteral)) {
+                    currentToken = potentialLiteral;
                     tokenLength = 4;
                 }
             }
+
+            // If not a color literal, treat as a single character/dot
+            if (!currentToken) {
+                currentToken = inputString[i];
+                tokenLength = 1;
+            }
             
-            charIndex += tokenLength;
-            tokenCount++;
+            // Validation: Map any non-allowed single char to Black {71} if it wasn't a literal
+            if (currentToken.length === 1 && !TOKEN_TO_INDEX[currentToken]) {
+                currentToken = COLOR_MAP[DEFAULT_COLOR]; // '{71}'
+            }
+            
+            tokens.push(currentToken);
+            i += tokenLength;
         }
-        return tokenCount;
+        
+        // Pad with Black {71} if grid isn't full
+        while (tokens.length < TOTAL_PIXELS) {
+            tokens.push(COLOR_MAP[DEFAULT_COLOR]); // '{71}'
+        }
+        
+        // Truncate to 88 pixels
+        return tokens.slice(0, TOTAL_PIXELS);
+    }
+
+    // Function to generate the compressed URL-safe Base64 string
+    function generateCompressedString(tokens) {
+        let binaryString = '';
+        
+        // 1. Convert tokens to 6-bit indices
+        tokens.forEach(token => {
+            let index = TOKEN_TO_INDEX[token];
+            if (index === undefined) {
+                index = TOKEN_TO_INDEX[COLOR_MAP[DEFAULT_COLOR]]; // Index 0: {71} fallback
+            }
+            
+            // Convert index (0-63) to 6-bit binary string
+            const sixBit = index.toString(2).padStart(6, '0');
+            binaryString += sixBit;
+        });
+
+        // 2. Pad to nearest 8 bits
+        while (binaryString.length % 8 !== 0) {
+            binaryString += '0';
+        }
+
+        // 3. Convert binary string to byte array (Uint8Array)
+        const bytes = [];
+        for (let i = 0; i < binaryString.length; i += 8) {
+            const byte = binaryString.substring(i, i + 8);
+            bytes.push(parseInt(byte, 2));
+        }
+
+        // 4. Convert byte array to standard Base64 string
+        const charCodes = bytes.map(byte => String.fromCharCode(byte));
+        // btoa() does not handle multi-byte characters well, but since we are dealing with 
+        // 8-bit characters (0-255), it is safe.
+        const base64 = btoa(charCodes.join(''));
+
+        // 5. Make Base64 URL-safe (replace +, / and trim padding =)
+        return base64.replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
+    }
+
+    // Function to decode the compressed URL-safe Base64 string
+    function decodeCompressedString(compressed) {
+        // 1. Restore padding and make Base64 URL-safe
+        let base64 = compressed.replace(/-/g, '+').replace(/_/g, '/');
+        while (base64.length % 4) {
+            base64 += '=';
+        }
+
+        // 2. Convert standard Base64 string back to byte array (Uint8Array)
+        const binary = atob(base64);
+        const bytes = new Uint8Array(binary.length);
+        for (let i = 0; i < binary.length; i++) {
+            bytes[i] = binary.charCodeAt(i);
+        }
+
+        // 3. Convert byte array to 6-bit binary string
+        let binaryString = '';
+        bytes.forEach(byte => {
+            binaryString += byte.toString(2).padStart(8, '0');
+        });
+
+        // The total number of 6-bit chunks needed is 88 (pixels)
+        const requiredBits = TOTAL_PIXELS * 6;
+        binaryString = binaryString.substring(0, requiredBits); // Trim padding bits
+
+        // 4. Convert 6-bit chunks back to tokens
+        const tokens = [];
+        for (let i = 0; i < requiredBits; i += 6) {
+            const sixBit = binaryString.substring(i, i + 6);
+            const index = parseInt(sixBit, 2);
+            
+            const token = INDEX_TO_TOKEN[index];
+            if (token) {
+                tokens.push(token);
+            } else {
+                // Fallback for safety
+                tokens.push(COLOR_MAP[DEFAULT_COLOR]); // {71}
+            }
+        }
+        
+        // 5. Join tokens back into the Vestaboard string format
+        return tokens.join('');
+    }
+    
+    // Function to get the number of pixels currently represented by the output string
+    function getCurrentTokenCount() {
+        // Now uses the new robust getAllTokens function
+        return getAllTokens(outputStringEl.value).length;
     }
 
     // Function to get the character start index in the string based on the pixel index
@@ -326,36 +472,10 @@
         isParsing = true; 
 
         const inputString = outputStringEl.value; 
-        const tokens = [];
-        let i = 0;
-
-        // Tokenize the string (map characters/literals to pixels)
-        while (i < inputString.length && tokens.length < TOTAL_PIXELS) {
-            let currentToken = '';
-            let tokenLength = 1;
-
-            if (inputString.substring(i, i + 1) === '{' && inputString.length >= i + 4) {
-                const potentialLiteral = inputString.substring(i, i + 4);
-                if (colorLiterals.includes(potentialLiteral)) {
-                    currentToken = potentialLiteral;
-                    tokenLength = 4;
-                }
-            }
-
-            if (!currentToken && inputString[i] === '.') {
-                currentToken = '.';
-                tokenLength = 1;
-            }
-
-            if (!currentToken) {
-                currentToken = inputString[i];
-                tokenLength = 1;
-            }
-            
-            tokens.push(currentToken);
-            i += tokenLength;
-        }
         
+        // Use the new getAllTokens function for consistent tokenization
+        const tokens = getAllTokens(inputString);
+
         // Find indices of pixels that are part of a sequential space sequence
         const sequentialSpacePixelIndices = [];
         for (let j = 0; j < TOTAL_PIXELS; j++) {
@@ -536,8 +656,23 @@
 
             typingIndex = prevIndex;
             
+            // In text mode, Backspace should delete the token and replace it with black/default color
             updatePixel(typingIndex, DEFAULT_COLOR); 
             
+            updateTypingIndicator();
+            return;
+        }
+
+        // Navigation keys
+        if (e.key === 'ArrowLeft') {
+            e.preventDefault();
+            typingIndex = (typingIndex - 1 + TOTAL_PIXELS) % TOTAL_PIXELS;
+            updateTypingIndicator();
+            return;
+        }
+        if (e.key === 'ArrowRight') {
+            e.preventDefault();
+            typingIndex = (typingIndex + 1) % TOTAL_PIXELS;
             updateTypingIndicator();
             return;
         }
@@ -562,7 +697,19 @@
 
     function loadStateFromURL() {
         const params = new URLSearchParams(window.location.search);
-        const content = params.get('content');
+        const compressedContent = params.get('c'); // New, compressed parameter
+        const content = params.get('content');      // Old, uncompressed parameter (fallback)
+
+        if (compressedContent) {
+            try {
+                // Decode the compressed string
+                outputStringEl.value = decodeCompressedString(compressedContent);
+                return true;
+            } catch (e) {
+                console.error("Failed to decode compressed URL:", e);
+                // Fallthrough to standard load or default
+            }
+        }
 
         if (content) {
             if (content.length > 0) {
@@ -574,21 +721,25 @@
     }
 
     function generateShareableURL() {
-        const content = outputStringEl.value;
-        const baseUrl = window.location.origin + window.location.pathname;
-
-        const encodedContent = encodeURIComponent(content); 
+        const inputString = outputStringEl.value;
         
-        const shareUrl = `${baseUrl}?content=${encodedContent}`;
+        // 1. Get tokens and generate compressed string
+        const tokens = getAllTokens(inputString);
+        const compressed = generateCompressedString(tokens);
+        
+        const baseUrl = window.location.origin + window.location.pathname;
+        
+        // 2. Use 'c' for the compressed content parameter
+        const shareUrl = `${baseUrl}?c=${compressed}`;
         
         shareUrlInputEl.value = shareUrl;
 
         try {
             shareUrlInputEl.select(); 
             document.execCommand('copy');
-            copyMessageEl.textContent = "Shareable URL generated and copied!";
+            copyMessageEl.textContent = "URL compacta gerada e copiada!";
         } catch (e) {
-            copyMessageEl.textContent = "Shareable URL generated (manual copy required).";
+            copyMessageEl.textContent = "URL compacta gerada (copie manualmente).";
         }
         
         copyMessageEl.classList.remove('opacity-0', 'text-red-400', 'text-cyan-300');
@@ -607,7 +758,7 @@
         selectColor(DEFAULT_COLOR);
         parseStringAndRedrawGrid();
         
-        copyMessageEl.textContent = "Grid cleared to Black.";
+        copyMessageEl.textContent = "Grid limpo para Preto.";
         copyMessageEl.classList.remove('opacity-0', 'text-red-400', 'text-cyan-400');
         copyMessageEl.classList.add('opacity-100', 'text-cyan-300');
         
@@ -674,7 +825,7 @@
             outputStringEl.select();
             document.execCommand('copy');
             
-            copyMessageEl.textContent = "Copied to clipboard!";
+            copyMessageEl.textContent = "Copiado para a área de transferência!";
             copyMessageEl.classList.remove('opacity-0', 'text-red-400', 'text-cyan-300');
             copyMessageEl.classList.add('opacity-100', 'text-cyan-400');
             
@@ -685,7 +836,7 @@
             
         } catch (err) {
             console.error('Copy Error:', err);
-            copyMessageEl.textContent = "Failed to copy. Try selecting and copying manually.";
+            copyMessageEl.textContent = "Falha ao copiar. Tente selecionar e copiar manualmente.";
             copyMessageEl.classList.remove('opacity-0', 'text-cyan-400', 'text-cyan-300');
             copyMessageEl.classList.add('opacity-100', 'text-red-400');
             setTimeout(() => {
@@ -705,7 +856,7 @@
 
         parseStringAndRedrawGrid();
 
-        copyMessageEl.textContent = "Black pixels replaced with dots (.).";
+        copyMessageEl.textContent = "Pixels pretos substituídos por pontos (.).";
         copyMessageEl.classList.remove('opacity-0', 'text-green-400', 'text-red-400');
         copyMessageEl.classList.add('opacity-100', 'text-cyan-300'); 
         
