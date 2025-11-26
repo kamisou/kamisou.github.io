@@ -1,0 +1,671 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>22x4 Vestaboard Editor</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        body {
+            font-family: 'ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace';
+            background-color: #1f2128; 
+            color: #e5e7eb;
+            display: flex;
+            justify-content: center;
+            align-items: flex-start;
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .pixel-cell {
+            width: 30px;
+            height: 30px;
+            cursor: pointer;
+            border: 1px solid #4a4a50;
+            transition: transform 0.05s ease-out, border-color 0.1s;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 8px;
+            font-weight: bold;
+            color: #fff;
+            text-shadow: 0 0 1px #1f2937;
+        }
+
+        .pixel-cell:hover {
+            transform: scale(1.1);
+            border-color: #a3a3a3;
+        }
+        
+        .pixel-cell.typing-cursor {
+            border: 3px solid #22d3ee;
+            box-shadow: 0 0 10px rgba(34, 211, 238, 0.5);
+        }
+
+        .color-option {
+            width: 40px;
+            height: 40px;
+            border-radius: 4px;
+            cursor: pointer;
+            margin: 4px;
+            border: 3px solid transparent;
+            transition: all 0.15s ease-in-out;
+        }
+
+        .color-option.selected {
+            transform: scale(1.15);
+            box-shadow: 0 0 0 3px #3b3e47, 0 0 0 6px #e5e7eb; 
+        }
+        
+        .text-mode-option {
+            background-color: #38bdf8;
+            color: black;
+            font-weight: bold;
+            font-size: 18px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+        .text-mode-option.active {
+            background-color: #22d3ee;
+            color: black;
+        }
+
+        #pixelGrid {
+            display: grid;
+            grid-template-columns: repeat(22, 1fr);
+            grid-template-rows: repeat(4, 1fr);
+            width: fit-content;
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.3), 0 4px 6px -2px rgba(0, 0, 0, 0.1);
+        }
+
+        #outputString {
+            resize: none;
+            height: 100px;
+            word-break: break-all;
+            background-color: #000;
+            border: 1px solid #4a4a50;
+        }
+    </style>
+</head>
+<body>
+
+<div class="p-6 max-w-4xl w-full bg-[#2c2e36] rounded-xl shadow-2xl font-mono">
+    <h1 class="text-3xl font-bold mb-6 text-center text-cyan-400">Vestaboard 22x4 Editor (Pixel Art & Text)</h1>
+    
+    <div class="mb-8 p-4 bg-[#3b3e47] rounded-lg">
+        <h2 class="text-xl font-semibold mb-3">Mode/Color Selector</h2>
+        <div id="paletteContainer" class="flex flex-wrap justify-center items-center">
+            
+            <div id="textModeButton" onclick="toggleTextMode()" 
+                 class="color-option text-mode-option transition duration-150" 
+                 title="Text Mode: Click to type directly onto the grid (black background).">
+                A
+            </div>
+            
+            <div id="colorPalette" class="flex flex-wrap justify-center">
+            </div>
+            
+        </div>
+        <p id="currentModeDisplay" class="text-center mt-3 text-sm text-gray-400">Current Mode: <span class="font-bold text-white">Color Mode (#000)</span></p>
+    </div>
+
+    <div class="mb-8 p-4 bg-[#3b3e47] rounded-lg">
+        <h2 class="text-xl font-semibold mb-3">Pixel Canvas (22 x 4)</h2>
+        <div id="pixelGrid" class="mx-auto">
+        </div>
+    </div>
+    
+    <div class="p-4 bg-[#3b3e47] rounded-lg">
+        <h2 class="text-xl font-semibold mb-3">Mapped Character String (Output Only)</h2>
+        <textarea id="outputString" class="w-full p-3 rounded-lg text-sm text-cyan-300"></textarea>
+        <div id="lengthWarning" class="mt-2 text-red-400 text-sm text-center font-semibold" style="display:none;"></div>
+        
+        <div class="flex space-x-4 mt-3">
+            <button onclick="copyOutput()" class="w-1/2 bg-cyan-600 hover:bg-cyan-700 text-white font-bold py-2 px-4 rounded-lg transition duration-150">
+                Copy String
+            </button>
+            <button onclick="replaceBlackWithDot()" class="w-1/2 bg-gray-500 hover:bg-gray-600 text-white font-bold py-2 px-4 rounded-lg transition duration-150">
+                Replace Black with Dot (.)
+            </button>
+        </div>
+
+        <div class="mt-4 pt-4 border-t border-gray-600">
+            <h3 class="text-lg font-semibold mb-2 text-white">Share/Bookmark URL</h3>
+            <button onclick="generateShareableURL()" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-lg transition duration-150">
+                Generate Shareable URL
+            </button>
+            <input type="text" id="shareUrlInput" readonly placeholder="Click the button to generate the URL" 
+                   class="w-full mt-2 p-2 rounded-lg text-sm bg-gray-700 text-cyan-300 border-none select-all cursor-pointer" 
+                   title="Click to copy URL"
+                   onclick="this.select(); document.execCommand('copy');">
+        </div>
+        
+        <div id="copyMessage" class="mt-2 text-cyan-400 text-sm text-center opacity-0 transition duration-300">Copied!</div>
+    </div>
+</div>
+
+<script>
+    const COLS = 22;
+    const ROWS = 4;
+    const TOTAL_PIXELS = COLS * ROWS;
+    const DEFAULT_COLOR = '#000';
+    const LITERAL_CHAR_COLOR = DEFAULT_COLOR; 
+    const MAX_LENGTH = 255;
+
+    const COLOR_MAP = {
+        '#f00': '{63}',
+        '#f80': '{64}',
+        '#ff0': '{65}',
+        '#0f0': '{66}',
+        '#00f': '{67}',
+        '#80f': '{68}',
+        '#fff': '{70}',
+        '#000': '{71}'
+    };
+    
+    const REVERSE_COLOR_MAP = {
+        '{63}': '#f00',
+        '{64}': '#f80',
+        '{65}': '#ff0',
+        '{66}': '#0f0',
+        '{67}': '#00f',
+        '{68}': '#80f',
+        '{70}': '#fff',
+        '{71}': '#000',
+        '.': '#000'
+    };
+
+    const PALETTE = Object.keys(COLOR_MAP); 
+    const COLOR_NAMES = {
+        '#f00': 'Red', '#f80': 'Orange', '#ff0': 'Yellow',
+        '#0f0': 'Green', '#00f': 'Blue', '#80f': 'Purple',
+        '#fff': 'White', '#000': 'Black'
+    };
+
+    let currentColor = DEFAULT_COLOR;
+    let isTextModeActive = false;
+    let typingIndex = 0;
+    let isParsing = false;
+    let isDrawing = false;
+
+    const colorLiterals = Object.keys(REVERSE_COLOR_MAP).filter(k => k.startsWith('{'));
+
+    const pixelGridEl = document.getElementById('pixelGrid');
+    const colorPaletteEl = document.getElementById('colorPalette');
+    const outputStringEl = document.getElementById('outputString');
+    const currentModeDisplayEl = document.querySelector('#currentModeDisplay span');
+    const copyMessageEl = document.getElementById('copyMessage');
+    const lengthWarningEl = document.getElementById('lengthWarning');
+    const textModeButtonEl = document.getElementById('textModeButton');
+    const shareUrlInputEl = document.getElementById('shareUrlInput');
+
+    function getCurrentTokenCount() {
+        const inputString = outputStringEl.value;
+        let charIndex = 0;
+        let tokenCount = 0;
+        
+        while (charIndex < inputString.length && tokenCount < TOTAL_PIXELS) {
+            let tokenLength = 1;
+
+            if (inputString.substring(charIndex, charIndex + 1) === '{' && inputString.length >= charIndex + 4) {
+                const potentialLiteral = inputString.substring(charIndex, charIndex + 4);
+                if (colorLiterals.includes(potentialLiteral)) {
+                    tokenLength = 4;
+                }
+            }
+            
+            charIndex += tokenLength;
+            tokenCount++;
+        }
+        return tokenCount;
+    }
+
+    function getCharIndexFromPixelIndex(pixelIndex) {
+        const inputString = outputStringEl.value;
+        let charIndex = 0;
+        let tokenCount = 0;
+        
+        while (charIndex < inputString.length && tokenCount < pixelIndex) {
+            let tokenLength = 1;
+
+            if (inputString.substring(charIndex, charIndex + 1) === '{' && inputString.length >= charIndex + 4) {
+                const potentialLiteral = inputString.substring(charIndex, charIndex + 4);
+                if (colorLiterals.includes(potentialLiteral)) {
+                    tokenLength = 4;
+                }
+            }
+            
+            charIndex += tokenLength;
+            tokenCount++;
+        }
+        return charIndex;
+    }
+    
+    function getPixelToken(pixelIndex) {
+        const inputString = outputStringEl.value;
+        const charStart = getCharIndexFromPixelIndex(pixelIndex);
+        
+        if (charStart >= inputString.length) {
+            return null;
+        }
+
+        let token = inputString.substring(charStart, charStart + 1);
+        
+        if (token === '{' && inputString.length >= charStart + 4) {
+             const potentialLiteral = inputString.substring(charStart, charStart + 4);
+             if (colorLiterals.includes(potentialLiteral)) {
+                 token = potentialLiteral;
+             }
+        }
+        return token;
+    }
+    
+    function getCleanChar(rawChar) {
+        if (!rawChar || rawChar.length !== 1) return null;
+        
+        const char = rawChar[0];
+        const charCode = char.charCodeAt(0);
+
+        const isLiteralAllowed = (charCode >= 32 && charCode <= 59) || 
+                                 (charCode >= 65 && charCode <= 90) || 
+                                 (charCode >= 97 && charCode <= 122) || 
+                                  charCode === 176;
+
+        if (isLiteralAllowed) {
+            if (charCode >= 97 && charCode <= 122) {
+                return char.toUpperCase(); 
+            } else {
+                return char;
+            }
+        }
+        
+        return null;
+    }
+    
+    function updateTypingIndicator() {
+        Array.from(pixelGridEl.children).forEach(cell => {
+            cell.classList.remove('typing-cursor');
+        });
+
+        if (isTextModeActive) {
+            const currentCell = pixelGridEl.children[typingIndex];
+            if (currentCell) {
+                currentCell.classList.add('typing-cursor');
+            }
+        }
+    }
+
+    function parseStringAndRedrawGrid() {
+        if (isParsing) return;
+        isParsing = true; 
+
+        const inputString = outputStringEl.value; 
+        const tokens = [];
+        let i = 0;
+
+        while (i < inputString.length && tokens.length < TOTAL_PIXELS) {
+            let currentToken = '';
+            let tokenLength = 1;
+
+            if (inputString.substring(i, i + 1) === '{' && inputString.length >= i + 4) {
+                const potentialLiteral = inputString.substring(i, i + 4);
+                if (colorLiterals.includes(potentialLiteral)) {
+                    currentToken = potentialLiteral;
+                    tokenLength = 4;
+                }
+            }
+
+            if (!currentToken && inputString[i] === '.') {
+                currentToken = '.';
+                tokenLength = 1;
+            }
+
+            if (!currentToken) {
+                currentToken = inputString[i];
+                tokenLength = 1;
+            }
+            
+            tokens.push(currentToken);
+            i += tokenLength;
+        }
+        
+        for (let j = 0; j < TOTAL_PIXELS; j++) {
+            const token = tokens[j]; 
+            const cell = pixelGridEl.children[j];
+            
+            if (!cell) continue;
+
+            let color = DEFAULT_COLOR; 
+            let content = '';
+
+            if (token) {
+                content = token; 
+                
+                if (REVERSE_COLOR_MAP[token]) {
+                    color = REVERSE_COLOR_MAP[token];
+                } else {
+                    color = LITERAL_CHAR_COLOR; 
+                }
+            } else {
+                color = DEFAULT_COLOR; 
+            }
+            
+            cell.style.backgroundColor = color;
+            
+            if (token && !token.startsWith('{')) {
+                cell.textContent = content; 
+            } else {
+                cell.textContent = '';
+            }
+        }
+        
+        const currentLength = inputString.length;
+        if (currentLength > MAX_LENGTH) {
+            lengthWarningEl.style.display = 'block';
+            lengthWarningEl.textContent = `WARNING: The output string length (${currentLength} characters) exceeds the ${MAX_LENGTH} character limit.`;
+        } else {
+            lengthWarningEl.style.display = 'none';
+        }
+        
+        isParsing = false;
+    }
+
+    function updatePixel(index, newContent) {
+        if (index < 0 || index >= TOTAL_PIXELS) return;
+        
+        const value = outputStringEl.value;
+        let newLiteral;
+
+        if (newContent.length === 1 && getCleanChar(newContent) !== null) {
+            newLiteral = newContent; 
+        } else {
+            newLiteral = COLOR_MAP[newContent] || COLOR_MAP[DEFAULT_COLOR]; 
+        }
+
+        const blackLiteral = COLOR_MAP[DEFAULT_COLOR];
+        const currentTokenCount = getCurrentTokenCount();
+
+        if (index >= currentTokenCount) {
+            const tokensToFill = index - currentTokenCount; 
+            
+            if (tokensToFill > 0) {
+                outputStringEl.value += blackLiteral.repeat(tokensToFill);
+            }
+            
+            outputStringEl.value += newLiteral;
+
+            parseStringAndRedrawGrid(); 
+            return;
+        }
+
+        const startCharIndex = getCharIndexFromPixelIndex(index);
+        
+        let existingTokenLength = 1;
+        const currentToken = value.substring(startCharIndex, startCharIndex + 4); 
+
+        if (colorLiterals.includes(currentToken)) {
+            existingTokenLength = 4;
+        } else if (value[startCharIndex] !== undefined) {
+            existingTokenLength = 1;
+        } 
+        
+        const newValue = value.substring(0, startCharIndex) + 
+                         newLiteral + 
+                         value.substring(startCharIndex + existingTokenLength);
+
+        outputStringEl.value = newValue;
+        
+        parseStringAndRedrawGrid();
+    }
+
+    function toggleTextMode() {
+        isTextModeActive = !isTextModeActive;
+        
+        if (isTextModeActive) {
+            textModeButtonEl.classList.add('active');
+            currentModeDisplayEl.textContent = 'Text Mode (Direct Typing)';
+            
+            selectColor(null); 
+
+            currentColor = DEFAULT_COLOR; 
+            
+        } else {
+            textModeButtonEl.classList.remove('active');
+            selectColor(DEFAULT_COLOR);
+        }
+
+        updateTypingIndicator();
+    }
+
+    function selectColor(color) {
+        if (color) {
+            currentColor = color;
+            currentModeDisplayEl.textContent = `Color Mode (${color} - ${COLOR_NAMES[color]})`;
+
+            isTextModeActive = false;
+            textModeButtonEl.classList.remove('active');
+        } else {
+             if (!isTextModeActive) {
+                 currentModeDisplayEl.textContent = `Color Mode (${currentColor} - ${COLOR_NAMES[currentColor]})`;
+             }
+        }
+        
+        Array.from(colorPaletteEl.children).forEach(el => {
+            if (el.dataset.color === currentColor && !isTextModeActive) {
+                el.classList.add('selected');
+            } else {
+                el.classList.remove('selected');
+            }
+        });
+        
+        updateTypingIndicator();
+    }
+    
+    function handleGlobalKeydown(e) {
+        if (!isTextModeActive) return;
+
+        if (e.key === 'Backspace') {
+            e.preventDefault();
+            
+            let prevIndex = (typingIndex - 1 + TOTAL_PIXELS) % TOTAL_PIXELS;
+
+            typingIndex = prevIndex;
+            
+            updatePixel(typingIndex, DEFAULT_COLOR); 
+            
+            updateTypingIndicator();
+            return;
+        }
+
+        if (e.metaKey || e.ctrlKey || e.altKey || e.key.length > 1) {
+            return;
+        }
+
+        const cleanedChar = getCleanChar(e.key);
+
+        if (cleanedChar !== null) {
+            e.preventDefault();
+            
+            if (cleanedChar === ' ') {
+                let prevIndex = (typingIndex - 1 + TOTAL_PIXELS) % TOTAL_PIXELS;
+                
+                const prevToken = getPixelToken(prevIndex); 
+
+                if (prevToken === ' ') {
+                    return;
+                }
+            }
+
+            updatePixel(typingIndex, cleanedChar); 
+
+            typingIndex = (typingIndex + 1) % TOTAL_PIXELS;
+            
+            updateTypingIndicator();
+        }
+    }
+
+    function loadStateFromURL() {
+        const params = new URLSearchParams(window.location.search);
+        const content = params.get('content');
+
+        if (content) {
+            if (content.length > 0) {
+                outputStringEl.value = content;
+                return true;
+            }
+        }
+        return false;
+    }
+
+    function generateShareableURL() {
+        const content = outputStringEl.value;
+        const baseUrl = window.location.origin + window.location.pathname;
+
+        const encodedContent = encodeURIComponent(content); 
+        
+        const shareUrl = `${baseUrl}?content=${encodedContent}`;
+        
+        shareUrlInputEl.value = shareUrl;
+
+        try {
+            shareUrlInputEl.select(); 
+            document.execCommand('copy');
+            copyMessageEl.textContent = "Shareable URL generated and copied!";
+        } catch (e) {
+            copyMessageEl.textContent = "Shareable URL generated (manual copy required).";
+        }
+        
+        copyMessageEl.classList.remove('opacity-0', 'text-red-400', 'text-cyan-300');
+        copyMessageEl.classList.add('opacity-100', 'text-cyan-400');
+        
+        setTimeout(() => {
+            copyMessageEl.classList.remove('opacity-100');
+            copyMessageEl.classList.add('opacity-0');
+        }, 2500);
+    }
+
+    function createGrid() {
+        for (let i = 0; i < TOTAL_PIXELS; i++) {
+            const cell = document.createElement('div');
+            cell.classList.add('pixel-cell');
+            cell.style.backgroundColor = DEFAULT_COLOR;
+            cell.dataset.index = i;
+
+            cell.addEventListener('click', () => {
+                const index = parseInt(cell.dataset.index);
+                
+                if (isTextModeActive) {
+                    typingIndex = index;
+                    updateTypingIndicator();
+                } else {
+                    updatePixel(index, currentColor);
+                }
+            });
+            
+            cell.addEventListener('mousedown', (e) => {
+                if (e.buttons === 1 && !isTextModeActive) {
+                    isDrawing = true;
+                    updatePixel(i, currentColor);
+                }
+            });
+            
+            cell.addEventListener('mouseover', () => {
+                if (isDrawing) {
+                    updatePixel(i, currentColor);
+                }
+            });
+            
+            pixelGridEl.appendChild(cell);
+        }
+    }
+
+    function createPalette() {
+        PALETTE.forEach(color => {
+            const option = document.createElement('div');
+            option.classList.add('color-option');
+            option.style.backgroundColor = color;
+            option.dataset.color = color;
+
+            option.addEventListener('click', () => selectColor(color));
+
+            option.title = `${COLOR_NAMES[color]} (${color}) | Maps to ${COLOR_MAP[color]}`;
+
+            colorPaletteEl.appendChild(option);
+        });
+        
+        selectColor(DEFAULT_COLOR);
+    }
+    
+    function copyOutput() {
+        try {
+            outputStringEl.select();
+            document.execCommand('copy');
+            
+            copyMessageEl.textContent = "Copied to clipboard!";
+            copyMessageEl.classList.remove('opacity-0', 'text-red-400', 'text-cyan-300');
+            copyMessageEl.classList.add('opacity-100', 'text-cyan-400');
+            
+            setTimeout(() => {
+                copyMessageEl.classList.remove('opacity-100');
+                copyMessageEl.classList.add('opacity-0');
+            }, 2000);
+            
+        } catch (err) {
+            console.error('Copy Error:', err);
+            copyMessageEl.textContent = "Failed to copy. Try selecting and copying manually.";
+            copyMessageEl.classList.remove('opacity-0', 'text-cyan-400', 'text-cyan-300');
+            copyMessageEl.classList.add('opacity-100', 'text-red-400');
+            setTimeout(() => {
+                copyMessageEl.classList.remove('opacity-100');
+                copyMessageEl.classList.add('opacity-0');
+            }, 3000);
+        }
+    }
+
+    function replaceBlackWithDot() {
+        const originalString = outputStringEl.value; 
+        const blackLiteral = COLOR_MAP['#000'];
+        
+        const replacedString = originalString.replaceAll(blackLiteral, '.');
+
+        outputStringEl.value = replacedString;
+
+        parseStringAndRedrawGrid();
+
+        copyMessageEl.textContent = "Black pixels replaced with dots (.).";
+        copyMessageEl.classList.remove('opacity-0', 'text-green-400', 'text-red-400');
+        copyMessageEl.classList.add('opacity-100', 'text-cyan-300'); 
+        
+        setTimeout(() => {
+            copyMessageEl.classList.remove('opacity-100');
+            copyMessageEl.classList.add('opacity-0');
+        }, 2000);
+    }
+
+    document.addEventListener('DOMContentLoaded', () => {
+        createGrid();
+        createPalette();
+        
+        const loadedFromURL = loadStateFromURL();
+        
+        if (!loadedFromURL) {
+            outputStringEl.value = COLOR_MAP[DEFAULT_COLOR].repeat(TOTAL_PIXELS);
+        }
+        
+        parseStringAndRedrawGrid(); 
+
+        outputStringEl.addEventListener('input', parseStringAndRedrawGrid);
+
+        document.addEventListener('keydown', handleGlobalKeydown);
+        
+        document.addEventListener('mouseup', () => {
+            isDrawing = false;
+        });
+        
+        updateTypingIndicator();
+    });
+
+</script>
+</body>
+</html>
