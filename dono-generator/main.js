@@ -716,6 +716,16 @@ function copyOutput() {
     }
 }
 
+function replaceBlackWithDot() {
+    const originalString = elements.outputString.value;
+    const blackLiteral = COLOR_MAP[MODES.DEFAULT_COLOR];
+    const replacedString = originalString.replaceAll(blackLiteral, '.');
+
+    elements.outputString.value = replacedString;
+    renderGridFromOutput();
+    flashMessage("Black pixels replaced with dots (.).");
+}
+
 document.addEventListener('DOMContentLoaded', () => {
     createGrid();
     createPalette();

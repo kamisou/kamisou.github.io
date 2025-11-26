@@ -44,10 +44,14 @@
                     </div>
                 </div>
 
-                <div class="mt-4 pt-3 border-t border-gray-600 flex justify-center">
+                <div class="mt-4 pt-3 gap-4 border-t border-gray-600 flex">
                     <button onclick="fillGrid()"
                         class="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-2 px-4 rounded-lg transition duration-150 shadow-md">
                         Fill Grid with Current
+                    </button>
+                    <button onclick="replaceBlackWithDot()"
+                        class="bg-gray-500 hover:bg-gray-600 text-white font-bold py-2 px-4 rounded-lg transition duration-150 shadow-md">
+                        Replace Black with Dot (.)
                     </button>
                 </div>
             </div>
@@ -69,8 +73,7 @@
                     style="display:none;"></div>
                 <div id="spaceWarning" class="mt-2 p-2 bg-red-800/30 rounded text-red-400 text-xs font-semibold"
                     style="display:none;"></div>
-                <div id="centeringWarning"
-                    class="mt-2 p-2 bg-red-800/30 rounded text-red-400 text-xs font-semibold"
+                <div id="centeringWarning" class="mt-2 p-2 bg-red-800/30 rounded text-red-400 text-xs font-semibold"
                     style="display:none;"></div>
 
                 <div class="button-group-vertical mt-5 border-t border-gray-600 pt-4">
