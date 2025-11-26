@@ -44,10 +44,9 @@ const COLOR_LITERALS = Object.keys(REVERSE_COLOR_MAP);
 const ORDERED_COLOR_LITERALS = ['{71}', '{70}', '{63}', '{64}', '{65}', '{66}', '{67}', '{68}'];
 
 const ALLOWED_CHARS_BASE = [
-    ' ', '!', '#', '$', '%', '&', '(', ')', '-', '=', ';', ':', '\'', '"', ',', '.', '?',
-    '/', '0', '1', '2', '3', '4', '5', '6', '7', '8', '9',
-    'A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K', 'L', 'M', 'N', 'O', 'P', 'Q', 'R', 'S', 'T', 'U', 'V', 'W', 'X', 'Y', 'Z',
-    String.fromCharCode(176)
+    'A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K', 'L', 'M', 'N', 'O', 'P', 'Q', 'R', 'S', 'T', 'U', 'V',
+    'W', 'X', 'Y', 'Z', '!', '@', '#', '$', '%', '&', '(', ')', '-', '+', '=', ';', ':', '/', '"', '\'', ',', '.', '?',
+    '°', '1', '2', '3', '4', '5', '6', '7', '8', '9', '0', ' ',
 ];
 
 const ALLOWED_CHARS_SET = new Set(ALLOWED_CHARS_BASE);
@@ -531,9 +530,24 @@ function loadStateFromURL() {
     const content = params.get('content');
 
     if (content) {
-        if (content.length > 0) {
-            elements.outputString.value = decodeURIComponent(content);
+        try {
+            const indexString = atob(content);
+            const indexArray = Array.from(indexString, char => char.charCodeAt(0));
+            const limitedIndexArray = indexArray.slice(0, GRID_DIMENSIONS.TOTAL_PIXELS);
+
+            let outputString = limitedIndexArray.map(index => {
+                return TOKEN_MAPPING.TO_TOKEN[index] || '.';
+            }).join('');
+
+            while (outputString.length < GRID_DIMENSIONS.TOTAL_PIXELS) {
+                outputString += '.';
+            }
+
+            elements.outputString.value = outputString;
             return true;
+        } catch (e) {
+            console.error("URL decoding error:", e);
+            return false;
         }
     }
     return false;
@@ -541,7 +555,15 @@ function loadStateFromURL() {
 
 function generateShareableURL() {
     const inputString = elements.outputString.value;
-    const encodedContent = encodeURIComponent(inputString);
+    const tokens = getAllTokens(inputString);
+
+    const indexArray = tokens.map(token => {
+        const index = TOKEN_MAPPING.TO_INDEX[token];
+        return index !== undefined ? index : TOKEN_MAPPING.TO_INDEX['.'];
+    });
+
+    const encodedContent = btoa(String.fromCharCode(...indexArray));
+
     const baseUrl = window.location.origin + window.location.pathname;
     const shareUrl = `${baseUrl}?content=${encodedContent}`;
 
@@ -550,9 +572,9 @@ function generateShareableURL() {
     try {
         elements.shareUrlInput.select();
         document.execCommand('copy');
-        flashMessage("URLEncoded URL generated and copied!");
+        flashMessage("Base64 URL generated and copied!");
     } catch (e) {
-        flashMessage("URLEncoded URL generated (copy manually).", true);
+        flashMessage("Base64 URL generated (copy manually).", true);
     }
 }
 
