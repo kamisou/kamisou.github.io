@@ -7,7 +7,7 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
         body {
-            font-family: ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, "Noto Sans", sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol", "Noto Color Emoji";
+            font-family: ui-sans-serif, system-ui, -apple-system, BlinkMacMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, "Noto Sans", sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol", "Noto Color Emoji";
             background-color: #1f2128; 
             color: #e5e7eb;
             display: flex;
@@ -59,6 +59,10 @@
             margin: 4px;
             border: 3px solid transparent;
             transition: all 0.15s ease-in-out;
+            display: flex; 
+            justify-content: center;
+            align-items: center;
+            font-weight: bold;
         }
 
         .color-option.selected {
@@ -66,18 +70,25 @@
             box-shadow: 0 0 0 3px #3b3e47, 0 0 0 6px #e5e7eb; 
         }
         
-        .text-mode-option {
-            background-color: #38bdf8;
-            color: black;
-            font-weight: bold;
-            font-size: 18px;
-            display: flex;
-            justify-content: center;
-            align-items: center;
+        .mode-selector {
+            background-color: transparent;
+            border: 3px solid #6b7280;
+            color: #fff;
         }
-        .text-mode-option.active {
-            background-color: #22d3ee;
-            color: black;
+
+        .text-mode-option {
+            font-size: 20px;
+        }
+        
+        .dot-mode-option {
+            font-size: 24px;
+            line-height: 1; 
+        }
+
+        .mode-selector.active {
+            transform: scale(1.15);
+            border-color: #22d3ee;
+            box-shadow: 0 0 0 3px #3b3e47, 0 0 0 6px #22d3ee;
         }
 
         #pixelGrid {
@@ -105,18 +116,28 @@
     
     <div class="mb-8 p-4 bg-[#3b3e47] rounded-lg">
         <h2 class="text-xl font-semibold mb-3">Mode/Color Selector</h2>
+        
         <div id="paletteContainer" class="flex flex-wrap justify-center items-center">
             
-            <div id="textModeButton" onclick="toggleTextMode()" 
-                 class="color-option text-mode-option transition duration-150" 
-                 title="Text Mode: Click to type directly onto the grid (black background).">
-                A
+            <div class="flex items-center mr-4 pr-4 border-r border-gray-600">
+                <div id="textModeButton" onclick="toggleTextMode()" 
+                     class="color-option mode-selector text-mode-option transition duration-150" 
+                     title="Text Mode: Click to type directly onto the grid (black background).">
+                    A
+                </div>
+                
+                <div id="dotModeButton" onclick="toggleDotMode()" 
+                     class="color-option mode-selector dot-mode-option transition duration-150" 
+                     title="Dot Mode: Click to draw black tiles using '.' character.">
+                    .
+                </div>
             </div>
-            
+
             <div id="colorPalette" class="flex flex-wrap justify-center">
             </div>
             
         </div>
+        
         <p id="currentModeDisplay" class="text-center mt-3 text-sm text-gray-400">Current Mode: <span class="font-bold text-white">Color Mode (#000)</span></p>
 
         <div class="mt-4 pt-3 border-t border-gray-600 flex justify-center">
@@ -167,12 +188,17 @@
 </div>
 
 <script>
-    const COLS = 22;
-    const ROWS = 4;
-    const TOTAL_PIXELS = COLS * ROWS;
-    const DEFAULT_COLOR = '#000';
-    const LITERAL_CHAR_COLOR = DEFAULT_COLOR; 
-    const MAX_LENGTH = 255;
+    const GRID_DIMENSIONS = {
+        COLS: 22,
+        ROWS: 4,
+        TOTAL_PIXELS: 88,
+        MAX_OUTPUT_LENGTH: 255
+    };
+
+    const MODES = {
+        DEFAULT_COLOR: '#000',
+        DOT_MODE_VALUE: 'DOT_MODE_VALUE'
+    };
 
     const COLOR_MAP = {
         '#f00': '{63}',
@@ -193,76 +219,78 @@
         '{67}': '#00f',
         '{68}': '#80f',
         '{70}': '#fff',
-        '{71}': '#000',
-        '.': '#000'
+        '{71}': '#000'
     };
 
-    const PALETTE = Object.keys(COLOR_MAP); 
+    const PALETTE_COLORS = Object.keys(COLOR_MAP); 
     const COLOR_NAMES = {
         '#f00': 'Red', '#f80': 'Orange', '#ff0': 'Yellow',
         '#0f0': 'Green', '#00f': 'Blue', '#80f': 'Purple',
-        '#fff': 'White', '#000': 'Black'
+        '#fff': 'White', '#000': 'Black',
+        [MODES.DOT_MODE_VALUE]: 'Dot/Blank'
     };
 
-    let currentColor = DEFAULT_COLOR;
-    let isTextModeActive = false;
-    let typingIndex = 0;
-    let isParsing = false;
-    let isDrawing = false;
-
-    const colorLiterals = Object.keys(REVERSE_COLOR_MAP).filter(k => k.startsWith('{'));
-
-    const TOKEN_TO_INDEX = {};
-    const INDEX_TO_TOKEN = [];
-    let idx = 0;
-
-    const orderedColorLiterals = ['{71}', '{70}', '{63}', '{64}', '{65}', '{66}', '{67}', '{68}'];
-    orderedColorLiterals.forEach(token => {
-        TOKEN_TO_INDEX[token] = idx;
-        INDEX_TO_TOKEN[idx] = token;
-        idx++;
-    }); 
-
-    const ALLOWED_CHARS_56 = [
-        ' ', 
-        '!', '#', '$', '%', '&', '(', ')', '-', '=', ';', ':', '\'', '"', ',', '.', '?',
+    const COLOR_LITERALS = Object.keys(REVERSE_COLOR_MAP);
+    const ORDERED_COLOR_LITERALS = ['{71}', '{70}', '{63}', '{64}', '{65}', '{66}', '{67}', '{68}'];
+    
+    const ALLOWED_CHARS_BASE = [
+        ' ', '!', '#', '$', '%', '&', '(', ')', '-', '=', ';', ':', '\'', '"', ',', '.', '?',
         '/', '0', '1', '2', '3', '4', '5', '6', '7', '8', '9',
         'A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K', 'L', 'M', 'N', 'O', 'P', 'Q', 'R', 'S', 'T', 'U', 'V', 'W', 'X', 'Y', 'Z',
         String.fromCharCode(176)
     ];
-    
-    const ALLOWED_CHARS_SET = new Set(ALLOWED_CHARS_56);
-    
-    ALLOWED_CHARS_56.filter(char => char.match(/[A-Z]/)).map(char => char.toLowerCase()).forEach(char => ALLOWED_CHARS_SET.add(char));
 
+    const ALLOWED_CHARS_SET = new Set(ALLOWED_CHARS_BASE);
+    ALLOWED_CHARS_BASE.filter(char => char.match(/[A-Z]/)).map(char => char.toLowerCase()).forEach(char => ALLOWED_CHARS_SET.add(char));
+    
+    const TOKEN_MAPPING = {
+        TO_INDEX: {},
+        TO_TOKEN: []
+    };
+    let mappingIndex = 0;
 
-    ALLOWED_CHARS_56.forEach(token => {
-        TOKEN_TO_INDEX[token] = idx;
-        INDEX_TO_TOKEN[idx] = token;
-        idx++;
+    ORDERED_COLOR_LITERALS.forEach(token => {
+        TOKEN_MAPPING.TO_INDEX[token] = mappingIndex;
+        TOKEN_MAPPING.TO_TOKEN[mappingIndex] = token;
+        mappingIndex++;
     }); 
+
+    ALLOWED_CHARS_BASE.forEach(token => {
+        TOKEN_MAPPING.TO_INDEX[token] = mappingIndex;
+        TOKEN_MAPPING.TO_TOKEN[mappingIndex] = token;
+        mappingIndex++;
+    }); 
+
+    let currentColor = MODES.DEFAULT_COLOR;
+    let isTextModeActive = false;
+    let typingIndex = 0;
+    let isRendering = false;
+    let isDrawing = false;
     
-    const pixelGridEl = document.getElementById('pixelGrid');
-    const colorPaletteEl = document.getElementById('colorPalette');
-    const outputStringEl = document.getElementById('outputString');
-    const currentModeDisplayEl = document.querySelector('#currentModeDisplay span');
-    const copyMessageEl = document.getElementById('copyMessage');
-    const lengthWarningEl = document.getElementById('lengthWarning');
-    const spaceWarningEl = document.getElementById('spaceWarning'); 
-    const textModeButtonEl = document.getElementById('textModeButton');
-    const shareUrlInputEl = document.getElementById('shareUrlInput');
+    const elements = {
+        pixelGrid: document.getElementById('pixelGrid'),
+        colorPalette: document.getElementById('colorPalette'),
+        outputString: document.getElementById('outputString'),
+        currentModeDisplay: document.querySelector('#currentModeDisplay span'),
+        copyMessage: document.getElementById('copyMessage'),
+        lengthWarning: document.getElementById('lengthWarning'),
+        spaceWarning: document.getElementById('spaceWarning'),
+        textModeButton: document.getElementById('textModeButton'),
+        dotModeButton: document.getElementById('dotModeButton'), 
+        shareUrlInput: document.getElementById('shareUrlInput')
+    };
 
     function getAllTokens(inputString) {
         const tokens = [];
         let i = 0;
 
-        while (i < inputString.length && tokens.length < TOTAL_PIXELS) {
+        while (i < inputString.length && tokens.length < GRID_DIMENSIONS.TOTAL_PIXELS) {
             let currentToken = '';
             let tokenLength = 1;
 
             if (inputString.substring(i, i + 1) === '{' && inputString.length >= i + 4) {
                 const potentialLiteral = inputString.substring(i, i + 4);
-                if (colorLiterals.includes(potentialLiteral)) {
+                if (COLOR_LITERALS.includes(potentialLiteral)) {
                     currentToken = potentialLiteral;
                     tokenLength = 4;
                 }
@@ -273,28 +301,28 @@
                 tokenLength = 1;
             }
             
-            if (currentToken.length === 1 && !TOKEN_TO_INDEX[currentToken]) {
-                currentToken = COLOR_MAP[DEFAULT_COLOR];
+            if (currentToken.length === 1 && !TOKEN_MAPPING.TO_INDEX[currentToken]) {
+                currentToken = COLOR_MAP[MODES.DEFAULT_COLOR];
             }
             
             tokens.push(currentToken);
             i += tokenLength;
         }
         
-        while (tokens.length < TOTAL_PIXELS) {
-            tokens.push(COLOR_MAP[DEFAULT_COLOR]);
+        while (tokens.length < GRID_DIMENSIONS.TOTAL_PIXELS) {
+            tokens.push(COLOR_MAP[MODES.DEFAULT_COLOR]);
         }
         
-        return tokens.slice(0, TOTAL_PIXELS);
+        return tokens.slice(0, GRID_DIMENSIONS.TOTAL_PIXELS);
     }
 
     function generateCompressedString(tokens) {
         let binaryString = '';
         
         tokens.forEach(token => {
-            let index = TOKEN_TO_INDEX[token];
+            let index = TOKEN_MAPPING.TO_INDEX[token];
             if (index === undefined) {
-                index = TOKEN_TO_INDEX[COLOR_MAP[DEFAULT_COLOR]];
+                index = TOKEN_MAPPING.TO_INDEX[COLOR_MAP[MODES.DEFAULT_COLOR]];
             }
             
             const sixBit = index.toString(2).padStart(6, '0');
@@ -334,7 +362,7 @@
             binaryString += byte.toString(2).padStart(8, '0');
         });
 
-        const requiredBits = TOTAL_PIXELS * 6;
+        const requiredBits = GRID_DIMENSIONS.TOTAL_PIXELS * 6;
         binaryString = binaryString.substring(0, requiredBits);
 
         const tokens = [];
@@ -342,23 +370,39 @@
             const sixBit = binaryString.substring(i, i + 6);
             const index = parseInt(sixBit, 2);
             
-            const token = INDEX_TO_TOKEN[index];
+            const token = TOKEN_MAPPING.TO_TOKEN[index];
             if (token) {
                 tokens.push(token);
             } else {
-                tokens.push(COLOR_MAP[DEFAULT_COLOR]);
+                tokens.push(COLOR_MAP[MODES.DEFAULT_COLOR]);
             }
         }
         
         return tokens.join('');
     }
     
-    function getCurrentTokenCount() {
-        return getAllTokens(outputStringEl.value).length;
+    function getTokenCount(inputString) {
+        let charIndex = 0;
+        let tokenCount = 0;
+        
+        while (charIndex < inputString.length && tokenCount < GRID_DIMENSIONS.TOTAL_PIXELS) {
+            let tokenLength = 1;
+
+            if (inputString.substring(charIndex, charIndex + 1) === '{' && inputString.length >= charIndex + 4) {
+                const potentialLiteral = inputString.substring(charIndex, charIndex + 4);
+                if (COLOR_LITERALS.includes(potentialLiteral)) {
+                    tokenLength = 4;
+                }
+            }
+            
+            charIndex += tokenLength;
+            tokenCount++;
+        }
+        return tokenCount;
     }
 
     function getCharIndexFromPixelIndex(pixelIndex) {
-        const inputString = outputStringEl.value;
+        const inputString = elements.outputString.value;
         let charIndex = 0;
         let tokenCount = 0;
         
@@ -367,7 +411,7 @@
 
             if (inputString.substring(charIndex, charIndex + 1) === '{' && inputString.length >= charIndex + 4) {
                 const potentialLiteral = inputString.substring(charIndex, charIndex + 4);
-                if (colorLiterals.includes(potentialLiteral)) {
+                if (COLOR_LITERALS.includes(potentialLiteral)) {
                     tokenLength = 4;
                 }
             }
@@ -376,25 +420,6 @@
             tokenCount++;
         }
         return charIndex;
-    }
-    
-    function getPixelToken(pixelIndex) {
-        const inputString = outputStringEl.value;
-        const charStart = getCharIndexFromPixelIndex(pixelIndex);
-        
-        if (charStart >= inputString.length) {
-            return null;
-        }
-
-        let token = inputString.substring(charStart, charStart + 1);
-        
-        if (token === '{' && inputString.length >= charStart + 4) {
-             const potentialLiteral = inputString.substring(charStart, charStart + 4);
-             if (colorLiterals.includes(potentialLiteral)) {
-                 token = potentialLiteral;
-             }
-        }
-        return token;
     }
     
     function getCleanChar(rawChar) {
@@ -414,79 +439,60 @@
     }
     
     function updateTypingIndicator() {
-        Array.from(pixelGridEl.children).forEach(cell => {
+        Array.from(elements.pixelGrid.children).forEach(cell => {
             cell.classList.remove('typing-cursor');
         });
 
         if (isTextModeActive) {
-            const currentCell = pixelGridEl.children[typingIndex];
+            const currentCell = elements.pixelGrid.children[typingIndex];
             if (currentCell) {
                 currentCell.classList.add('typing-cursor');
             }
         }
     }
 
-    function parseStringAndRedrawGrid() {
-        if (isParsing) return;
-        isParsing = true; 
+    function renderGridFromOutput() {
+        if (isRendering) return;
+        isRendering = true; 
 
-        const inputString = outputStringEl.value; 
+        const inputString = elements.outputString.value; 
         const tokens = getAllTokens(inputString); 
-
-        let charIndex = 0;
-        let lastExplicitPixelIndex = -1;
-        while (charIndex < inputString.length && lastExplicitPixelIndex < TOTAL_PIXELS - 1) {
-            let tokenLength = 1;
-
-            if (inputString.substring(charIndex, charIndex + 1) === '{' && inputString.length >= charIndex + 4) {
-                const potentialLiteral = inputString.substring(charIndex, charIndex + 4);
-                if (colorLiterals.includes(potentialLiteral)) {
-                    tokenLength = 4;
-                }
-            }
-            
-            charIndex += tokenLength;
-            lastExplicitPixelIndex++; 
-        }
+        const actualTokenCount = getTokenCount(inputString);
 
         const sequentialSpacePixelIndices = [];
-        for (let j = 0; j <= lastExplicitPixelIndex; j++) {
+        for (let j = 0; j < actualTokenCount; j++) { 
             const token = tokens[j];
             
             if (token === ' ') {
                 const prevToken = j > 0 ? tokens[j - 1] : null;
-                const nextToken = j < TOTAL_PIXELS - 1 ? tokens[j + 1] : null;
+                const nextToken = j < GRID_DIMENSIONS.TOTAL_PIXELS - 1 ? tokens[j + 1] : null;
                 
-                if (prevToken === ' ' || nextToken === ' ') {
+                if ((prevToken === ' ' || nextToken === ' ') && j < actualTokenCount) { 
                     sequentialSpacePixelIndices.push(j);
                 }
             }
         }
         
-        for (let j = 0; j < TOTAL_PIXELS; j++) {
-            const cell = pixelGridEl.children[j];
+        for (let j = 0; j < GRID_DIMENSIONS.TOTAL_PIXELS; j++) {
+            const cell = elements.pixelGrid.children[j];
             
             if (!cell) continue;
 
             cell.classList.remove('sequential-space-highlight');
 
-            if (j <= lastExplicitPixelIndex) {
+            if (j < actualTokenCount) {
                 const token = tokens[j]; 
                 let color = 'transparent'; 
                 
-                if (token) {
-                    if (REVERSE_COLOR_MAP[token] && token.startsWith('{')) { 
-                        color = REVERSE_COLOR_MAP[token]; 
-                        cell.textContent = ''; 
-                        
-                    } else if (!token.startsWith('{')) { 
-                        color = 'transparent'; 
-                        cell.textContent = token; 
-                        
-                    } else {
-                        color = DEFAULT_COLOR;
-                        cell.textContent = '';
-                    }
+                if (token && token.startsWith('{')) { 
+                    color = REVERSE_COLOR_MAP[token] || 'transparent'; 
+                    cell.textContent = ''; 
+                } else if (token) { 
+                    color = 'transparent'; 
+                    cell.textContent = token; 
+                } else {
+                    color = MODES.DEFAULT_COLOR;
+                    cell.textContent = '';
                 }
                 
                 cell.style.backgroundColor = color;
@@ -502,126 +508,159 @@
         }
         
         const currentLength = inputString.length;
-        if (currentLength > MAX_LENGTH) {
-            lengthWarningEl.style.display = 'block';
-            lengthWarningEl.textContent = `WARNING: The output string length (${currentLength} characters) exceeds the ${MAX_LENGTH} character limit.`;
-        } else {
-            lengthWarningEl.style.display = 'none';
-        }
+        elements.lengthWarning.style.display = currentLength > GRID_DIMENSIONS.MAX_OUTPUT_LENGTH ? 'block' : 'none';
+        elements.lengthWarning.textContent = `WARNING: The output string length (${currentLength} characters) exceeds the ${GRID_DIMENSIONS.MAX_OUTPUT_LENGTH} character limit.`;
         
         const hasSequentialSpaces = inputString.includes('  '); 
         
-        if (hasSequentialSpaces) {
-            spaceWarningEl.style.display = 'block';
-            spaceWarningEl.textContent = "WARNING: Sequential spaces will be truncated into a single space in the donation.";
-        } else {
-            spaceWarningEl.style.display = 'none';
-        }
+        elements.spaceWarning.style.display = hasSequentialSpaces ? 'block' : 'none';
+        elements.spaceWarning.textContent = "WARNING: Sequential spaces will be truncated into a single space in the donation.";
         
-        isParsing = false;
+        isRendering = false;
     }
 
     function updatePixel(index, newContent) {
-        if (index < 0 || index >= TOTAL_PIXELS) return;
+        if (index < 0 || index >= GRID_DIMENSIONS.TOTAL_PIXELS) return;
         
-        const value = outputStringEl.value;
+        const value = elements.outputString.value;
         let newLiteral;
 
-        if (newContent.length === 1 && getCleanChar(newContent) !== null) {
+        if (newContent === MODES.DOT_MODE_VALUE) {
+            newLiteral = '.';
+        } else if (newContent.length === 1 && getCleanChar(newContent) !== null) {
             newLiteral = newContent; 
         } else {
-            newLiteral = COLOR_MAP[newContent] || COLOR_MAP[DEFAULT_COLOR]; 
+            newLiteral = COLOR_MAP[newContent] || COLOR_MAP[MODES.DEFAULT_COLOR]; 
         }
 
-        const blackLiteral = COLOR_MAP[DEFAULT_COLOR];
-        const currentTokenCount = getCurrentTokenCount();
+        const currentTokenCount = getTokenCount(value);
+        const startCharIndex = getCharIndexFromPixelIndex(index);
 
         if (index >= currentTokenCount) {
             const tokensToFill = index - currentTokenCount; 
             
             if (tokensToFill > 0) {
-                outputStringEl.value += blackLiteral.repeat(tokensToFill);
+                elements.outputString.value += '.'.repeat(tokensToFill);
             }
             
-            outputStringEl.value += newLiteral;
+            elements.outputString.value += newLiteral;
 
-            parseStringAndRedrawGrid(); 
+            renderGridFromOutput(); 
             return;
         }
 
-        const startCharIndex = getCharIndexFromPixelIndex(index);
-        
         let existingTokenLength = 1;
         const currentToken = value.substring(startCharIndex, startCharIndex + 4); 
 
-        if (colorLiterals.includes(currentToken)) {
+        if (COLOR_LITERALS.includes(currentToken) && currentToken.startsWith('{')) {
             existingTokenLength = 4;
         } else if (value[startCharIndex] !== undefined) {
             existingTokenLength = 1;
-        } 
+        } else {
+            existingTokenLength = 0;
+        }
         
         const newValue = value.substring(0, startCharIndex) + 
                          newLiteral + 
                          value.substring(startCharIndex + existingTokenLength);
 
-        outputStringEl.value = newValue;
+        elements.outputString.value = newValue;
         
-        parseStringAndRedrawGrid();
+        renderGridFromOutput();
     }
 
     function toggleTextMode() {
         isTextModeActive = !isTextModeActive;
         
         if (isTextModeActive) {
-            textModeButtonEl.classList.add('active');
-            currentModeDisplayEl.textContent = 'Text Mode (Direct Typing)';
+            elements.textModeButton.classList.add('active');
+            elements.currentModeDisplay.textContent = 'Text Mode (Direct Typing)';
             
             selectColor(null); 
+            elements.dotModeButton.classList.remove('active');
 
-            currentColor = DEFAULT_COLOR; 
+            currentColor = MODES.DEFAULT_COLOR; 
             
         } else {
-            textModeButtonEl.classList.remove('active');
-            selectColor(DEFAULT_COLOR);
+            elements.textModeButton.classList.remove('active');
+            selectColor(MODES.DEFAULT_COLOR);
         }
 
+        updateTypingIndicator();
+    }
+    
+    function toggleDotMode() {
+        if (currentColor === MODES.DOT_MODE_VALUE) {
+            selectColor(MODES.DEFAULT_COLOR);
+            return;
+        }
+        
+        isTextModeActive = false;
+        elements.textModeButton.classList.remove('active');
+        
+        currentColor = MODES.DOT_MODE_VALUE;
+        
+        elements.currentModeDisplay.textContent = `Color Mode (${COLOR_NAMES[currentColor]})`;
+        
+        Array.from(elements.colorPalette.children).forEach(el => el.classList.remove('selected'));
+        
+        elements.dotModeButton.classList.add('active');
+        
         updateTypingIndicator();
     }
 
     function selectColor(color) {
         if (color) {
             currentColor = color;
-            currentModeDisplayEl.textContent = `Color Mode (${color} - ${COLOR_NAMES[color]})`;
+            elements.currentModeDisplay.textContent = `Color Mode (${color} - ${COLOR_NAMES[color]})`;
 
             isTextModeActive = false;
-            textModeButtonEl.classList.remove('active');
-        } else {
-             if (!isTextModeActive) {
-                 currentModeDisplayEl.textContent = `Color Mode (${currentColor} - ${COLOR_NAMES[currentColor]})`;
-             }
+            elements.textModeButton.classList.remove('active');
+            elements.dotModeButton.classList.remove('active');
         }
         
-        Array.from(colorPaletteEl.children).forEach(el => {
-            if (el.dataset.color === currentColor && !isTextModeActive) {
+        Array.from(elements.colorPalette.children).forEach(el => {
+            el.classList.remove('selected');
+            if (el.dataset.color === currentColor && !isTextModeActive && currentColor !== MODES.DOT_MODE_VALUE) {
                 el.classList.add('selected');
-            } else {
-                el.classList.remove('selected');
             }
         });
+        
+        if (currentColor === MODES.DOT_MODE_VALUE && !isTextModeActive) {
+            elements.dotModeButton.classList.add('active');
+        } else {
+            elements.dotModeButton.classList.remove('active');
+        }
         
         updateTypingIndicator();
     }
     
+    function flashMessage(message, isError = false) {
+        elements.copyMessage.textContent = message;
+        
+        elements.copyMessage.classList.remove('opacity-0', 'text-red-400', 'text-cyan-400');
+        
+        if (isError) {
+            elements.copyMessage.classList.add('opacity-100', 'text-red-400');
+        } else {
+            elements.copyMessage.classList.add('opacity-100', 'text-cyan-400');
+        }
+        
+        setTimeout(() => {
+            elements.copyMessage.classList.remove('opacity-100');
+            elements.copyMessage.classList.add('opacity-0');
+        }, 2500);
+    }
+
     function handleGlobalKeydown(e) {
         if (!isTextModeActive) return;
 
         if (e.key === 'Backspace') {
             e.preventDefault();
             
-            let deletePixelIndex = (typingIndex - 1 + TOTAL_PIXELS) % TOTAL_PIXELS;
+            let deletePixelIndex = (typingIndex - 1 + GRID_DIMENSIONS.TOTAL_PIXELS) % GRID_DIMENSIONS.TOTAL_PIXELS;
 
-            const value = outputStringEl.value;
-            
+            const value = elements.outputString.value;
             const startCharIndex = getCharIndexFromPixelIndex(deletePixelIndex);
 
             if (startCharIndex >= value.length) {
@@ -631,51 +670,49 @@
             }
             
             const token = value.substring(startCharIndex, startCharIndex + 4);
-            let tokenLength;
+            let tokenLength = 1;
             
-            if (colorLiterals.includes(token)) {
+            if (COLOR_LITERALS.includes(token) && token.startsWith('{')) {
                 tokenLength = 4;
-            } else if (value[startCharIndex] !== undefined) {
-                tokenLength = 1;
-            } else {
+            } else if (value[startCharIndex] === undefined) {
                 typingIndex = deletePixelIndex;
                 updateTypingIndicator();
                 return;
             }
             
-            outputStringEl.value = value.substring(0, startCharIndex) + 
+            elements.outputString.value = value.substring(0, startCharIndex) + 
                                    value.substring(startCharIndex + tokenLength);
             
             typingIndex = deletePixelIndex; 
             
-            parseStringAndRedrawGrid(); 
+            renderGridFromOutput(); 
             updateTypingIndicator();
             return;
         }
 
         if (e.key === 'ArrowLeft') {
             e.preventDefault();
-            typingIndex = (typingIndex - 1 + TOTAL_PIXELS) % TOTAL_PIXELS;
+            typingIndex = (typingIndex - 1 + GRID_DIMENSIONS.TOTAL_PIXELS) % GRID_DIMENSIONS.TOTAL_PIXELS;
             updateTypingIndicator();
             return;
         }
         if (e.key === 'ArrowRight') {
             e.preventDefault();
-            typingIndex = (typingIndex + 1) % TOTAL_PIXELS;
+            typingIndex = (typingIndex + 1) % GRID_DIMENSIONS.TOTAL_PIXELS;
             updateTypingIndicator();
             return;
         }
         
         if (e.key === 'ArrowUp') {
             e.preventDefault();
-            typingIndex = (typingIndex - COLS + TOTAL_PIXELS) % TOTAL_PIXELS;
+            typingIndex = (typingIndex - GRID_DIMENSIONS.COLS + GRID_DIMENSIONS.TOTAL_PIXELS) % GRID_DIMENSIONS.TOTAL_PIXELS;
             updateTypingIndicator();
             return;
         }
 
         if (e.key === 'ArrowDown') {
             e.preventDefault();
-            typingIndex = (typingIndex + COLS) % TOTAL_PIXELS;
+            typingIndex = (typingIndex + GRID_DIMENSIONS.COLS) % GRID_DIMENSIONS.TOTAL_PIXELS;
             updateTypingIndicator();
             return;
         }
@@ -691,7 +728,7 @@
             
             updatePixel(typingIndex, cleanedChar); 
 
-            typingIndex = (typingIndex + 1) % TOTAL_PIXELS;
+            typingIndex = (typingIndex + 1) % GRID_DIMENSIONS.TOTAL_PIXELS;
             
             updateTypingIndicator();
         }
@@ -704,7 +741,7 @@
 
         if (compressedContent) {
             try {
-                outputStringEl.value = decodeCompressedString(compressedContent);
+                elements.outputString.value = decodeCompressedString(compressedContent);
                 return true;
             } catch (e) {
                 console.error("Failed to decode compressed URL:", e);
@@ -713,7 +750,7 @@
 
         if (content) {
             if (content.length > 0) {
-                outputStringEl.value = content;
+                elements.outputString.value = content;
                 return true;
             }
         }
@@ -721,75 +758,56 @@
     }
 
     function generateShareableURL() {
-        const inputString = outputStringEl.value;
-        
+        const inputString = elements.outputString.value;
         const tokens = getAllTokens(inputString);
         const compressed = generateCompressedString(tokens);
-        
         const baseUrl = window.location.origin + window.location.pathname;
-        
         const shareUrl = `${baseUrl}?c=${compressed}`;
         
-        shareUrlInputEl.value = shareUrl;
+        elements.shareUrlInput.value = shareUrl;
 
         try {
-            shareUrlInputEl.select(); 
+            elements.shareUrlInput.select(); 
             document.execCommand('copy');
-            copyMessageEl.textContent = "Compressed URL generated and copied!";
+            flashMessage("Compressed URL generated and copied!");
         } catch (e) {
-            copyMessageEl.textContent = "Compressed URL generated (copy manually).";
+            flashMessage("Compressed URL generated (copy manually).", true);
         }
-        
-        copyMessageEl.classList.remove('opacity-0', 'text-red-400', 'text-cyan-300');
-        copyMessageEl.classList.add('opacity-100', 'text-cyan-400');
-        
-        setTimeout(() => {
-            copyMessageEl.classList.remove('opacity-100');
-            copyMessageEl.classList.add('opacity-0');
-        }, 2500);
     }
     
     function clearGrid() {
-        outputStringEl.value = "";
+        elements.outputString.value = "";
         typingIndex = 0;
         isTextModeActive = false;
-        selectColor(DEFAULT_COLOR);
-        parseStringAndRedrawGrid();
+        selectColor(MODES.DEFAULT_COLOR);
+        renderGridFromOutput();
         
-        copyMessageEl.textContent = "Grid cleared to Empty.";
-        copyMessageEl.classList.remove('opacity-0', 'text-red-400', 'text-cyan-400');
-        copyMessageEl.classList.add('opacity-100', 'text-cyan-300');
-        
-        setTimeout(() => {
-            copyMessageEl.classList.remove('opacity-100');
-            copyMessageEl.classList.add('opacity-0');
-        }, 2000);
+        flashMessage("Grid cleared to Empty.");
     }
 
     function fillGrid() {
-        const colorLiteral = COLOR_MAP[currentColor];
+        let fillLiteral;
+        let colorName;
         
-        outputStringEl.value = colorLiteral.repeat(TOTAL_PIXELS);
+        if (currentColor === MODES.DOT_MODE_VALUE) {
+            fillLiteral = '.';
+            colorName = COLOR_NAMES[MODES.DOT_MODE_VALUE];
+        } else {
+            fillLiteral = COLOR_MAP[currentColor];
+            colorName = COLOR_NAMES[currentColor];
+        }
+
+        elements.outputString.value = fillLiteral.repeat(GRID_DIMENSIONS.TOTAL_PIXELS);
 
         typingIndex = 0; 
         updateTypingIndicator();
+        renderGridFromOutput();
 
-        parseStringAndRedrawGrid();
-
-        const colorName = COLOR_NAMES[currentColor] || 'the selected color'; 
-        copyMessageEl.textContent = `Grid filled with ${colorName}.`;
-        
-        copyMessageEl.classList.remove('opacity-0', 'text-red-400', 'text-cyan-400');
-        copyMessageEl.classList.add('opacity-100', 'text-cyan-300');
-        
-        setTimeout(() => {
-            copyMessageEl.classList.remove('opacity-100');
-            copyMessageEl.classList.add('opacity-0');
-        }, 2500);
+        flashMessage(`Grid filled with ${colorName}.`);
     }
 
     function createGrid() {
-        for (let i = 0; i < TOTAL_PIXELS; i++) {
+        for (let i = 0; i < GRID_DIMENSIONS.TOTAL_PIXELS; i++) {
             const cell = document.createElement('div');
             cell.classList.add('pixel-cell');
             cell.dataset.index = i;
@@ -818,14 +836,19 @@
                 }
             });
             
-            pixelGridEl.appendChild(cell);
+            elements.pixelGrid.appendChild(cell);
         }
     }
 
     function createPalette() {
-        PALETTE.forEach(color => {
+        PALETTE_COLORS.forEach(color => {
             const option = document.createElement('div');
             option.classList.add('color-option');
+            
+            if (color === MODES.DEFAULT_COLOR) {
+                 option.classList.add('mode-selector'); 
+            }
+            
             option.style.backgroundColor = color;
             option.dataset.color = color;
 
@@ -833,56 +856,32 @@
 
             option.title = `${COLOR_NAMES[color]} | Maps to ${COLOR_MAP[color]}`;
 
-            colorPaletteEl.appendChild(option);
+            elements.colorPalette.appendChild(option);
         });
         
-        selectColor(DEFAULT_COLOR);
+        selectColor(MODES.DEFAULT_COLOR);
     }
     
     function copyOutput() {
         try {
-            outputStringEl.select();
+            elements.outputString.select();
             document.execCommand('copy');
-            
-            copyMessageEl.textContent = "String copied to clipboard!";
-            copyMessageEl.classList.remove('opacity-0', 'text-red-400', 'text-cyan-300');
-            copyMessageEl.classList.add('opacity-100', 'text-cyan-400');
-            
-            setTimeout(() => {
-                copyMessageEl.classList.remove('opacity-100');
-                copyMessageEl.classList.add('opacity-0');
-            }, 2000);
+            flashMessage("String copied to clipboard!");
             
         } catch (err) {
             console.error('Copy Error:', err);
-            copyMessageEl.textContent = "Copy failed. Try selecting and copying manually.";
-            copyMessageEl.classList.remove('opacity-0', 'text-cyan-400', 'text-cyan-300');
-            copyMessageEl.classList.add('opacity-100', 'text-red-400');
-            setTimeout(() => {
-                copyMessageEl.classList.remove('opacity-100');
-                copyMessageEl.classList.add('opacity-0');
-            }, 3000);
+            flashMessage("Copy failed. Try selecting and copying manually.", true);
         }
     }
 
     function replaceBlackWithDot() {
-        const originalString = outputStringEl.value; 
-        const blackLiteral = COLOR_MAP['#000'];
-        
+        const originalString = elements.outputString.value; 
+        const blackLiteral = COLOR_MAP[MODES.DEFAULT_COLOR];
         const replacedString = originalString.replaceAll(blackLiteral, '.');
 
-        outputStringEl.value = replacedString;
-
-        parseStringAndRedrawGrid();
-
-        copyMessageEl.textContent = "Black pixels replaced with dots (.).";
-        copyMessageEl.classList.remove('opacity-0', 'text-green-400', 'text-red-400');
-        copyMessageEl.classList.add('opacity-100', 'text-cyan-300'); 
-        
-        setTimeout(() => {
-            copyMessageEl.classList.remove('opacity-100');
-            copyMessageEl.classList.add('opacity-0');
-        }, 2000);
+        elements.outputString.value = replacedString;
+        renderGridFromOutput();
+        flashMessage("Black pixels replaced with dots (.).");
     }
 
     document.addEventListener('DOMContentLoaded', () => {
@@ -892,10 +891,10 @@
         const loadedFromURL = loadStateFromURL();
         
         if (!loadedFromURL) {
-            outputStringEl.value = "";
+            elements.outputString.value = "";
         }
         
-        parseStringAndRedrawGrid(); 
+        renderGridFromOutput(); 
 
         document.addEventListener('keydown', handleGlobalKeydown);
         
