@@ -17,7 +17,7 @@ const COLOR_MAP = {
     '#109B47': '{66}',
     '#2082C5': '{67}',
     '#712D8E': '{68}',
-    '#fff': '{70}',
+    '#FFFFFF': '{70}',
     '#252728': '{71}'
 };
 
@@ -28,7 +28,7 @@ const REVERSE_COLOR_MAP = {
     '{66}': '#109B47',
     '{67}': '#2082C5',
     '{68}': '#712D8E',
-    '{70}': '#fff',
+    '{70}': '#FFFFFF',
     '{71}': '#252728'
 };
 
@@ -44,9 +44,9 @@ const COLOR_LITERALS = Object.keys(REVERSE_COLOR_MAP);
 const ORDERED_COLOR_LITERALS = ['{71}', '{70}', '{63}', '{64}', '{65}', '{66}', '{67}', '{68}'];
 
 const ALLOWED_CHARS_BASE = [
-    'A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K', 'L', 'M', 'N', 'O', 'P', 'Q', 'R', 'S', 'T', 'U', 'V',
-    'W', 'X', 'Y', 'Z', '!', '@', '#', '$', '%', '&', '(', ')', '-', '+', '=', ';', ':', '/', '"', '\'', ',', '.', '?',
-    '°', '1', '2', '3', '4', '5', '6', '7', '8', '9', '0', ' ',
+    'A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K', 'L', 'M', 'N', 'O', 'P', 'Q', 'R', 'S', 'T', 'U', 'V', 'W', 'X', 'Y', 'Z',
+    '!', '@', '#', '$', '%', '&', '(', ')', '-', '+', '=', ';', ':', '/', '"', '\'', ',', '.', '?', '°', ' ',
+    '1', '2', '3', '4', '5', '6', '7', '8', '9', '0'
 ];
 
 const ALLOWED_CHARS_SET = new Set(ALLOWED_CHARS_BASE);
@@ -392,9 +392,8 @@ function selectColor(color) {
         currentColor = color;
 
         const displayColorName = COLOR_NAMES[color];
-        const displayLiteral = COLOR_MAP[color] || 'Text';
 
-        elements.currentModeDisplay.textContent = `Color Mode (${displayColorName} - ${displayLiteral})`;
+        elements.currentModeDisplay.textContent = `Color Mode (${displayColorName})`;
 
         isTextModeActive = false;
         elements.textModeButton.classList.remove('active');
@@ -619,7 +618,6 @@ function clearGrid() {
     elements.outputString.value = "";
     typingIndex = 0;
     isTextModeActive = false;
-    selectColor(MODES.DEFAULT_COLOR);
     renderGridFromOutput();
 
     flashMessage("Grid cleared to Empty.");
@@ -710,9 +708,8 @@ function createPalette() {
 function copyOutput() {
     try {
         elements.outputString.select();
-        document.execCommand('copy');
+        navigator.clipboard.writeText(elements.outputString.value);
         flashMessage("String copied to clipboard!");
-
     } catch (err) {
         console.error('Copy Error:', err);
         flashMessage("Copy failed. Try selecting and copying manually.", true);
@@ -732,10 +729,7 @@ document.addEventListener('DOMContentLoaded', () => {
     renderGridFromOutput();
 
     document.addEventListener('keydown', handleGlobalKeydown);
-
-    document.addEventListener('mouseup', () => {
-        isDrawing = false;
-    });
+    document.addEventListener('mouseup', () => isDrawing = false);
 
     updateTypingIndicator();
 });
