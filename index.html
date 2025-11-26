@@ -4,109 +4,11 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Destiny.gg Vestaboard Dono Generator</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <link rel="stylesheet" href="style.css" />
+    <title>kamisou.github.io</title>
 </head>
 
-<body>
-    <div class="main-container">
-        <h1 class="text-4xl font-extrabold text-center text-cyan-400">Destiny.gg Dono Editor</h1>
-
-        <div class="grid-and-controls">
-
-            <div class="card control-panel">
-                <h2 class="text-xl font-semibold mb-4 text-sky-300 border-b border-gray-600 pb-2">Drawing Tools</h2>
-
-                <p class="text-sm text-gray-400 mb-3">Select Mode and Color/Character:</p>
-
-                <div class="flex flex-wrap justify-center mb-5">
-                    <div id="textModeButton" onclick="toggleTextMode()"
-                        class="color-option mode-selector text-mode-option transition duration-150 mr-4"
-                        title="Text Mode: Click to type directly onto the grid (black background).">
-                        A
-                    </div>
-
-                    <div id="dotModeButton" onclick="toggleDotMode()"
-                        class="color-option mode-selector dot-mode-option transition duration-150"
-                        title="Dot Mode: Click to draw black tiles using '.' character.">
-                        .
-                    </div>
-                </div>
-
-                <p id="currentModeDisplay" class="text-center mt-3 text-sm font-medium text-gray-300">Current Mode:
-                    <span class="font-bold text-white">Color Mode (#252728)</span>
-                </p>
-
-                <div class="my-4 border-t border-gray-600 pt-4">
-                    <h3 class="text-lg font-medium mb-3 text-white">Vestaboard Colors</h3>
-                    <div id="colorPalette" class="flex flex-wrap justify-center">
-                    </div>
-                </div>
-
-                <div class="mt-4 pt-3 border-t border-gray-600 flex justify-center">
-                    <button onclick="fillGrid()"
-                        class="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-2 px-4 rounded-lg transition duration-150 shadow-md">
-                        Fill Grid with Current
-                    </button>
-                </div>
-            </div>
-
-            <div class="pixel-canvas-wrapper card p-5">
-                <h2 class="text-2xl font-semibold mb-4 text-center text-white">Pixel Canvas (22 x 4)</h2>
-                <div id="pixelGrid">
-                </div>
-            </div>
-
-            <div class="card control-panel">
-                <h2 class="text-xl font-semibold mb-4 text-sky-300 border-b border-gray-600 pb-2">Output & Utilities
-                </h2>
-
-                <h3 class="text-lg font-medium mb-2 text-white">Mapped String Output</h3>
-                <textarea id="outputString" class="w-full" readonly></textarea>
-
-                <div id="lengthWarning" class="mt-3 p-2 bg-red-800/30 rounded text-red-400 text-xs font-semibold"
-                    style="display:none;"></div>
-                <div id="spaceWarning" class="mt-2 p-2 bg-red-800/30 rounded text-red-400 text-xs font-semibold"
-                    style="display:none;"></div>
-                <div id="centeringWarning"
-                    class="mt-2 p-2 bg-yellow-700/30 rounded text-yellow-400 text-xs font-semibold"
-                    style="display:none;"></div>
-
-                <div class="button-group-vertical mt-5 border-t border-gray-600 pt-4">
-                    <button onclick="copyOutput()"
-                        class="bg-cyan-600 hover:bg-cyan-700 text-white font-bold py-2 px-4 rounded-lg transition duration-150 shadow-md">
-                        Copy String to Clipboard
-                    </button>
-                    <button onclick="replaceBlackWithDot()"
-                        class="bg-gray-500 hover:bg-gray-600 text-white font-bold py-2 px-4 rounded-lg transition duration-150 shadow-md">
-                        Replace Black with Dot (.)
-                    </button>
-                    <button onclick="clearGrid()"
-                        class="bg-red-600 hover:bg-red-700 text-white font-bold py-2 px-4 rounded-lg transition duration-150 shadow-md">
-                        Clear All Pixels
-                    </button>
-                </div>
-
-                <div class="mt-5 pt-4 border-t border-gray-600">
-                    <h3 class="text-lg font-medium mb-2 text-white">Share URL</h3>
-                    <button onclick="generateShareableURL()"
-                        class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-lg transition duration-150 shadow-md">
-                        Generate Shareable URL
-                    </button>
-                    <input type="text" id="shareUrlInput" readonly placeholder="URL will appear here"
-                        class="w-full mt-2 p-2 rounded-lg text-sm bg-gray-700 text-cyan-300 border-none select-all cursor-pointer"
-                        title="Click to copy URL" onclick="this.select(); document.execCommand('copy');">
-                </div>
-
-                <div id="copyMessage"
-                    class="mt-4 text-green-400 text-sm text-center opacity-0 transition duration-300 font-semibold">
-                    Copied!</div>
-            </div>
-        </div>
-    </div>
-
-    <script src="main.js"></script>
+<body style="background-color: black; font-family: monospace; color: white; padding: 2em;">
+    <a href="dono-generator/" style="color: white; font-size: 1.5em;">Destiny.gg Vestaboard Dono Generator</a>
 </body>
 
 </html>

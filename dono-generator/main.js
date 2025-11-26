@@ -255,7 +255,7 @@ function renderGridFromOutput() {
 
     const currentLength = inputString.length;
     elements.lengthWarning.style.display = currentLength > GRID_DIMENSIONS.MAX_OUTPUT_LENGTH ? 'block' : 'none';
-    elements.lengthWarning.textContent = `WARNING: The output string length (${currentLength} characters) exceeds the ${GRID_DIMENSIONS.MAX_OUTPUT_LENGTH} character limit.`;
+    elements.lengthWarning.textContent = `WARNING: The output string length (${currentLength} characters) exceeds the ${GRID_DIMENSIONS.MAX_OUTPUT_LENGTH} donation character limit.`;
 
     const hasSequentialSpaces = inputString.includes('  ');
 
@@ -294,7 +294,7 @@ function renderGridFromOutput() {
 
     elements.centeringWarning.style.display = needsCenteringWarning ? 'block' : 'none';
     if (needsCenteringWarning) {
-        elements.centeringWarning.textContent = "WARNING: One or more lines contain less than 22 tokens (characters/colors) and will be horizontally centered by the Vestaboard hardware.";
+        elements.centeringWarning.textContent = "WARNING: One or more lines contain less than 22 tokens (characters/colors) and will be horizontally centered.";
     }
 
     isRendering = false;
@@ -658,16 +658,6 @@ function copyOutput() {
         console.error('Copy Error:', err);
         flashMessage("Copy failed. Try selecting and copying manually.", true);
     }
-}
-
-function replaceBlackWithDot() {
-    const originalString = elements.outputString.value;
-    const blackLiteral = COLOR_MAP[MODES.DEFAULT_COLOR];
-    const replacedString = originalString.replaceAll(blackLiteral, '.');
-
-    elements.outputString.value = replacedString;
-    renderGridFromOutput();
-    flashMessage("Black pixels replaced with dots (.).");
 }
 
 document.addEventListener('DOMContentLoaded', () => {
