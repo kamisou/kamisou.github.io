@@ -119,10 +119,6 @@ function getAllTokens(inputString) {
         i += tokenLength;
     }
 
-    while (tokens.length < GRID_DIMENSIONS.TOTAL_PIXELS) {
-        tokens.push('.');
-    }
-
     return tokens.slice(0, GRID_DIMENSIONS.TOTAL_PIXELS);
 }
 
@@ -527,21 +523,26 @@ function handleGlobalKeydown(e) {
 
 function loadStateFromURL() {
     const params = new URLSearchParams(window.location.search);
-    const content = params.get('content');
+    let content = params.get('content');
 
     if (content) {
-        try {
-            const indexString = atob(content);
-            const indexArray = Array.from(indexString, char => char.charCodeAt(0));
-            const limitedIndexArray = indexArray.slice(0, GRID_DIMENSIONS.TOTAL_PIXELS);
+        content = content.replace(/-/g, '+').replace(/_/g, '/');
 
-            let outputString = limitedIndexArray.map(index => {
+        while (content.length % 4) {
+            content += '=';
+        }
+
+        try {
+            const binaryString = atob(content);
+            const indexArray = new Uint8Array(binaryString.length);
+
+            for (let i = 0; i < binaryString.length; i++) {
+                indexArray[i] = binaryString.charCodeAt(i);
+            }
+
+            let outputString = Array.from(indexArray).slice(0, GRID_DIMENSIONS.TOTAL_PIXELS).map(index => {
                 return TOKEN_MAPPING.TO_TOKEN[index] || '.';
             }).join('');
-
-            while (outputString.length < GRID_DIMENSIONS.TOTAL_PIXELS) {
-                outputString += '.';
-            }
 
             elements.outputString.value = outputString;
             return true;
@@ -562,7 +563,15 @@ function generateShareableURL() {
         return index !== undefined ? index : TOKEN_MAPPING.TO_INDEX['.'];
     });
 
-    const encodedContent = btoa(String.fromCharCode(...indexArray));
+    const byteArray = new Uint8Array(indexArray);
+
+    let binaryString = '';
+    for (let i = 0; i < byteArray.byteLength; i++) {
+        binaryString += String.fromCharCode(byteArray[i]);
+    }
+
+    let encodedContent = btoa(binaryString);
+    encodedContent = encodedContent.replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
 
     const baseUrl = window.location.origin + window.location.pathname;
     const shareUrl = `${baseUrl}?content=${encodedContent}`;
