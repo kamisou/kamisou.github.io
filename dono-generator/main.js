@@ -17,8 +17,8 @@ const COLOR_MAP = {
     '#109B47': '{66}',
     '#2082C5': '{67}',
     '#712D8E': '{68}',
-    '#FFFFFF': '{70}',
-    '#252728': '{71}'
+    '#FFFFFF': '{69}',
+    '#252728': '{70}'
 };
 
 const REVERSE_COLOR_MAP = {
@@ -28,8 +28,8 @@ const REVERSE_COLOR_MAP = {
     '{66}': '#109B47',
     '{67}': '#2082C5',
     '{68}': '#712D8E',
-    '{70}': '#FFFFFF',
-    '{71}': '#252728'
+    '{69}': '#FFFFFF',
+    '{70}': '#252728'
 };
 
 const PALETTE_COLORS = Object.keys(COLOR_MAP);
@@ -41,7 +41,7 @@ const COLOR_NAMES = {
 };
 
 const COLOR_LITERALS = Object.keys(REVERSE_COLOR_MAP);
-const ORDERED_COLOR_LITERALS = ['{71}', '{70}', '{63}', '{64}', '{65}', '{66}', '{67}', '{68}'];
+const ORDERED_COLOR_LITERALS = ['{70}', '{69}', '{63}', '{64}', '{65}', '{66}', '{67}', '{68}'];
 
 const ALLOWED_CHARS_BASE = [
     'A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K', 'L', 'M', 'N', 'O', 'P', 'Q', 'R', 'S', 'T', 'U', 'V', 'W', 'X', 'Y', 'Z',
