@@ -457,9 +457,11 @@ function handleGlobalKeydown(e) {
 
         const token = value.substring(startCharIndex, startCharIndex + 4);
         let tokenLength = 1;
+        let replacement = '.';
 
         if (COLOR_LITERALS.includes(token) && token.startsWith('{')) {
             tokenLength = 4;
+            replacement = '.';
         } else if (value[startCharIndex] === undefined) {
             typingIndex = deletePixelIndex;
             updateTypingIndicator();
@@ -467,6 +469,7 @@ function handleGlobalKeydown(e) {
         }
 
         elements.outputString.value = value.substring(0, startCharIndex) +
+            replacement +
             value.substring(startCharIndex + tokenLength);
 
         typingIndex = deletePixelIndex;
