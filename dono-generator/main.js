@@ -36,7 +36,7 @@ const PALETTE_COLORS = Object.keys(COLOR_MAP);
 const COLOR_NAMES = {
     '#DA2C27': 'Red', '#F67621': 'Orange', '#FDB71D': 'Yellow',
     '#109B47': 'Green', '#2082C5': 'Blue', '#712D8E': 'Purple',
-    '#fff': 'White', '#252728': 'Black',
+    '#FFFFFF': 'White', '#252728': 'Black',
     [MODES.DOT_MODE_VALUE]: 'Dot/Blank'
 };
 
