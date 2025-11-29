@@ -719,6 +719,29 @@ function copyOutput() {
     }
 }
 
+async function pasteFromClipboard() {
+    if (!navigator.clipboard || !navigator.clipboard.readText) {
+        flashMessage('Clipboard API not available in this browser.', true);
+        return;
+    }
+
+    try {
+        const text = await navigator.clipboard.readText();
+        if (!text) {
+            flashMessage('Clipboard is empty.', true);
+            return;
+        }
+
+        // Place clipboard content into output textarea and re-render the grid.
+        elements.outputString.value = text;
+        renderGridFromOutput();
+        flashMessage('Pasted string from clipboard.');
+    } catch (err) {
+        console.error('Paste Error:', err);
+        flashMessage('Failed to read clipboard. Try allowing clipboard access.', true);
+    }
+}
+
 function replaceBlackWithDot() {
     const originalString = elements.outputString.value;
     const blackLiteral = COLOR_MAP[MODES.DEFAULT_COLOR];
