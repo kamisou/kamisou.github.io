@@ -88,5 +88,5 @@ for (const job of experienceData.jobs) {
 
 experienceYears.innerHTML = `${currentDate.getFullYear() - experienceData.start}+ anos`;
 
-phoneNumberAnchor.href = `tel:${contactData.phoneNumber.replaceAll(/\D/g, '')}`;
+phoneNumberAnchor.href = `tel:${contactData.phoneNumber.replaceAll(/^[0-9\+]/g, '')}`;
 phoneNumberAnchor.innerHTML = contactData.phoneNumber;
