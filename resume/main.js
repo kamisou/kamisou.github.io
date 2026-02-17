@@ -57,7 +57,7 @@ const
     phoneNumberAnchor = document.querySelector('#phone-number');
 
 emailAddressAnchor.href = `mailto:${contactData.emailAddress}`;
-emailAddressAnchor.innerHTML = contactData.emailAddress;
+emailAddressAnchor.innerHTML += contactData.emailAddress;
 
 for (const job of experienceData.jobs) {
     const div = document.createElement('div');
@@ -67,6 +67,7 @@ for (const job of experienceData.jobs) {
     const description = document.createElement('ul');
     const divider = document.createElement('hr');
 
+    div.classList.add('experience');
     title.innerText = job.title;
     company.innerText = job.company;
     range.classList.add('date-range');
@@ -86,7 +87,7 @@ for (const job of experienceData.jobs) {
     experience.appendChild(div);
 }
 
-experienceYears.innerHTML = `${currentDate.getFullYear() - experienceData.start}+ anos`;
+experienceYears.innerHTML = `${currentDate.getFullYear() - experienceData.start} anos`;
 
-phoneNumberAnchor.href = `tel:${contactData.phoneNumber.replaceAll(/^[0-9\+]/g, '')}`;
-phoneNumberAnchor.innerHTML = contactData.phoneNumber;
+phoneNumberAnchor.href = `tel:${contactData.phoneNumber.replaceAll(/[^0-9\+]/g, '')}`;
+phoneNumberAnchor.innerHTML += contactData.phoneNumber;
