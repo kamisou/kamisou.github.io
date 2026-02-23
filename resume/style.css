@@ -4,6 +4,7 @@
 }
 
 html {
+    --dark-grey-color: #252525;
     --grey-color: #505050;
     --light-grey-color: #c0c0c0;
     --highlight-color: #4769da;
@@ -79,6 +80,13 @@ p {
     margin: 0.6em 0.2em 2em 0.2em;
 }
 
+h3,
+h4,
+p,
+li {
+    color: var(--dark-grey-color);
+}
+
 .date-range {
     color: var(--grey-color);
     font-size: 0.85em;
@@ -98,7 +106,7 @@ p {
 }
 
 ul {
-    padding-left: 2em;
+    padding: 1em 0 0 2em;
 }
 
 ul>li {
