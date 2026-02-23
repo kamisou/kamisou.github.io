@@ -17,7 +17,7 @@ const
                 tasks: [
                     'Desenvolvi e mantive aplicações de celular utilizadas por milhares de cooperados e colaboradores.',
                     'Contribuí para o evento Agroleite desenvolvendo aplicativo para votação no concurso e com informações pertinentes ao evento.',
-                    'Desenvolvi biblioteca interna para reutilização de código nos projetos de aplicativos móveis.'
+                    'Desenvolvi uma biblioteca interna para reutilização de código nos projetos de aplicativos móveis.'
                 ]
             },
             {
@@ -26,7 +26,7 @@ const
                 start: 2022,
                 end: 2024,
                 tasks: [
-                    'Desenvolvi componente Adaptor em NodeJS para transformar requisições e respostas de API SOAP em API REST utilizadas por sistemas internos.',
+                    'Desenvolvi um componente Adaptor em NodeJS para transformar requisições e respostas de API SOAP em API REST utilizadas por sistemas internos.',
                     'Atendi diversos clientes com desenvolvimento e manutenção de aplicativos web com Laravel e PHP.'
                 ]
             },
@@ -46,8 +46,8 @@ const
                 start: 2020,
                 end: 2021,
                 tasks: [
-                    'Elaborei dashboards com Excel, Power BI e Power Automate',
-                    'Desenvolvi uma aplicação web/móvel com PowerApps para gerência de projetos',
+                    'Elaborei dashboards com Excel, Power BI e Power Automate.',
+                    'Desenvolvi uma aplicação web/móvel com PowerApps para gerência de projetos.',
                 ]
             }
         ],
