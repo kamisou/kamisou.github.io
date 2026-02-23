@@ -6,12 +6,13 @@
 html {
     --grey-color: #505050;
     --light-grey-color: #c0c0c0;
-    --highlight-color: #d22e3e;
+    --highlight-color: #4769da;
 }
 
 body {
     align-items: center;
     display: flex;
+    font-size: 0.95em;
     flex-direction: column;
     margin: 2em;
 }
@@ -31,14 +32,14 @@ h2 {
 }
 
 h4 {
-    font-size: 1.2em;
-    margin-top: 0.6em;
+    font-size: 1.1em;
+    margin-top: 0.8em;
 }
 
 h5 {
     color: var(--highlight-color);
-    font-size: 1em;
-    margin-top: 0.2em;
+    font-size: 0.9em;
+    margin: 0.2em 0;
 }
 
 address {
@@ -47,7 +48,7 @@ address {
     margin: 0 0 1em 0;
 }
 
-@media (max-width: 480px) {
+@media (max-width: 700px) {
     address {
         flex-direction: column;
     }
@@ -75,7 +76,7 @@ section>hr {
 }
 
 p {
-    margin: 0.6em 0.2em 2em;
+    margin: 0.6em 0.2em 2em 0.2em;
 }
 
 .date-range {
@@ -93,13 +94,13 @@ p {
 
 .experience hr {
     border: 1px dashed var(--light-grey-color);
-    margin-top: 1em;
+    margin-top: 2em;
 }
 
 ul {
-    padding-left: 1.2em;
+    padding-left: 2em;
 }
 
 ul>li {
-    padding-left: 0.4em;
+    padding-left: 0.2em;
 }

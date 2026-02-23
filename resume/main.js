@@ -4,6 +4,7 @@ const
     contactData = {
         emailAddress: 'kamisou.dev@gmail.com',
         phoneNumber: '+55 (42) 9 9943-8951',
+        linkedin: 'https://linkedin.com/in/kamisou/'
     },
     experienceData = {
         start: 2020,
@@ -14,7 +15,9 @@ const
                 start: 2024,
                 end: null,
                 tasks: [
-                    'Desenvolvimento e manutenção de aplicações móveis para cooperados e convidados'
+                    'Desenvolvi e mantive aplicações de celular utilizadas por milhares de cooperados e colaboradores.',
+                    'Contribuí para o evento Agroleite desenvolvendo aplicativo para votação no concurso e com informações pertinentes ao evento.',
+                    'Desenvolvi biblioteca interna para reutilização de código nos projetos de aplicativos móveis.'
                 ]
             },
             {
@@ -23,9 +26,8 @@ const
                 start: 2022,
                 end: 2024,
                 tasks: [
-                    'Desenvolvimento e manutenção de aplicações móveis internas e para clientes',
-                    'Desenvolvimento e manutenção de aplicações web internas e para clientes',
-                    'Desenvolvimento de APIs REST para aplicações internas'
+                    'Desenvolvi componente Adaptor em NodeJS para transformar requisições e respostas de API SOAP em API REST utilizadas por sistemas internos.',
+                    'Atendi diversos clientes com desenvolvimento e manutenção de aplicativos web com Laravel e PHP.'
                 ]
             },
             {
@@ -34,7 +36,8 @@ const
                 start: 2021,
                 end: 2022,
                 tasks: [
-                    'Desenvolvimento e manutenção de aplicações móveis para clientes'
+                    'Atendi diversos clientes com desenvolvimento e manutenção de aplicativos de celular em Flutter com dart.',
+                    'Incorporei os padrões de design BLoC pattern e bibliotecas de gerência de estado nos aplicativos (Riverpod, Provider).'
                 ]
             },
             {
@@ -43,8 +46,8 @@ const
                 start: 2020,
                 end: 2021,
                 tasks: [
-                    'Elaboração de relatórios de projetos em Excel, Power BI e Power Automate',
-                    'Desenvolvimento de aplicação web/móvel com PowerApps para projetos',
+                    'Elaborei dashboards com Excel, Power BI e Power Automate',
+                    'Desenvolvi uma aplicação web/móvel com PowerApps para gerência de projetos',
                 ]
             }
         ],
@@ -54,6 +57,7 @@ const
     emailAddressAnchor = document.querySelector('#email-address'),
     experience = document.querySelector('#experience'),
     experienceYears = document.querySelector('.experience-years'),
+    linkedinAnchor = document.querySelector('#linkedin'),
     phoneNumberAnchor = document.querySelector('#phone-number');
 
 emailAddressAnchor.href = `mailto:${contactData.emailAddress}`;
@@ -88,6 +92,9 @@ for (const job of experienceData.jobs) {
 }
 
 experienceYears.innerHTML = `${currentDate.getFullYear() - experienceData.start} anos`;
+
+linkedinAnchor.href = contactData.linkedin;
+linkedinAnchor.innerHTML += contactData.linkedin.substring(8);
 
 phoneNumberAnchor.href = `tel:${contactData.phoneNumber.replaceAll(/[^0-9\+]/g, '')}`;
 phoneNumberAnchor.innerHTML += contactData.phoneNumber;
