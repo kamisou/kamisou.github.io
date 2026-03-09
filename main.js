@@ -15,7 +15,7 @@ const
                 start: 2024,
                 end: null,
                 tasks: [
-                    'Desenvolvi e mantive aplicações de celular utilizadas por milhares de cooperados e colaboradores.',
+                    'Desenvolvi e mantive aplicações Ágil Castrolanda e Serviços Castrolanda usada por centenas de cooperados e colaboradores.',
                     'Contribuí para o evento Agroleite desenvolvendo aplicativo para votação no concurso e com informações pertinentes ao evento.',
                     'Desenvolvi uma biblioteca interna para reutilização de código nos projetos de aplicativos móveis.'
                 ]
@@ -69,7 +69,6 @@ for (const job of experienceData.jobs) {
     const company = document.createElement('h5');
     const range = document.createElement('span');
     const description = document.createElement('ul');
-    const divider = document.createElement('hr');
 
     div.classList.add('experience');
     title.innerText = job.title;
@@ -87,7 +86,6 @@ for (const job of experienceData.jobs) {
     div.appendChild(company);
     div.appendChild(range);
     div.appendChild(description);
-    div.appendChild(divider);
     experience.appendChild(div);
 }
 
