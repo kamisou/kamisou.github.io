@@ -2,57 +2,245 @@
 <html lang="pt-BR">
 
 <head>
-    <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>kamisou.github.io</title>
-    <link href="style.css" rel="stylesheet">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>João Kaminoski — Engenheiro de Software</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display&family=DM+Mono:wght@400;500&display=swap"
+    rel="stylesheet" />
+  <style>
+    *,
+    *::before,
+    *::after {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    :root {
+      --bg: #F5F2ED;
+      --ink: #1A1A1A;
+      --muted: #8A8070;
+      --border: #D4CEC5;
+      --btn-bg: #1A1A1A;
+      --btn-txt: #F5F2ED;
+      --btn-hover: #333;
+      --shadow: rgba(0, 0, 0, 0.12);
+    }
+
+    html,
+    body {
+      height: 100%;
+      background: var(--bg);
+      color: var(--ink);
+      font-family: 'DM Mono', monospace;
+    }
+
+    /* ── Layout ── */
+    .shell {
+      min-height: 100vh;
+      display: grid;
+      grid-template-rows: auto 1fr auto;
+    }
+
+    /* ── Header ── */
+    header {
+      padding: 2.4rem 2.4rem 1.8rem;
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      align-items: flex-end;
+      justify-content: space-between;
+      gap: 1.6rem;
+      flex-wrap: wrap;
+      animation: fadeDown 0.5s ease both;
+    }
+
+    .header-left h1 {
+      font-family: 'DM Serif Display', serif;
+      font-size: clamp(1.6rem, 3vw, 2.4rem);
+      line-height: 1.1;
+      letter-spacing: -0.02em;
+    }
+
+    .header-left p {
+      margin-top: 0.4rem;
+      font-size: 0.72rem;
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+      color: var(--muted);
+    }
+
+    .btn-download {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.55rem;
+      padding: 0.65rem 1.3rem;
+      background: var(--btn-bg);
+      color: var(--btn-txt);
+      font-family: 'DM Mono', monospace;
+      font-size: 0.72rem;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      text-decoration: none;
+      border: none;
+      cursor: pointer;
+      transition: background 0.18s ease, transform 0.12s ease;
+      white-space: nowrap;
+    }
+
+    .btn-download:hover {
+      background: var(--btn-hover);
+      transform: translateY(-1px);
+    }
+
+    .btn-download:active {
+      transform: translateY(0);
+    }
+
+    .btn-download svg {
+      flex-shrink: 0;
+      stroke: currentColor;
+      fill: none;
+      stroke-width: 1.8;
+      stroke-linecap: round;
+      stroke-linejoin: round;
+    }
+
+    /* ── PDF viewer ── */
+    .viewer {
+      position: relative;
+      padding: 2rem 2.4rem;
+      display: flex;
+      justify-content: center;
+      animation: fadeUp 0.55s 0.1s ease both;
+    }
+
+    .pdf-wrap {
+      width: 100%;
+      max-width: 860px;
+      box-shadow: 0 4px 32px var(--shadow), 0 1px 4px var(--shadow);
+      border: 1px solid var(--border);
+      background: #fff;
+    }
+
+    embed {
+      display: block;
+      width: 100%;
+      height: 86vh;
+      min-height: 520px;
+      border: none;
+    }
+
+    /* fallback for browsers that don't render embed */
+    .fallback {
+      display: none;
+      padding: 3rem 2rem;
+      text-align: center;
+      font-size: 0.82rem;
+      color: var(--muted);
+      line-height: 1.8;
+    }
+
+    .fallback a {
+      color: var(--ink);
+    }
+
+    /* ── Footer ── */
+    footer {
+      padding: 1.2rem 2.4rem;
+      border-top: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      gap: 0.6rem;
+    }
+
+    footer span {
+      font-size: 0.68rem;
+      letter-spacing: 0.06em;
+      color: var(--muted);
+    }
+
+    /* ── Animations ── */
+    @keyframes fadeDown {
+      from {
+        opacity: 0;
+        transform: translateY(-10px);
+      }
+
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    @keyframes fadeUp {
+      from {
+        opacity: 0;
+        transform: translateY(10px);
+      }
+
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    /* ── Mobile ── */
+    @media (max-width: 560px) {
+      header {
+        padding: 1.6rem 1.2rem 1.4rem;
+      }
+
+      .viewer {
+        padding: 1rem 0;
+      }
+
+      footer {
+        padding: 1rem 1.2rem;
+      }
+
+      embed {
+        height: 78vh;
+      }
+    }
+  </style>
 </head>
 
 <body>
-    <nav></nav>
-    <main>
-        <header>
-            <h1>João Marcos Kaminoski de Souza</h1>
-            <h2>Engenheiro de Software</h2>
-            <address>
-                <a id="phone-number"></a>
-                <a id="email-address"></a>
-                <a id="linkedin" target="_blank"></a>
-            </address>
-        </header>
+  <div class="shell">
 
-        <body>
-            <section>
-                <h3>Perfil Profissional</h3>
-                <hr>
-                <p>Engenheiro de Software com <span class="experience-years"></span> de experiência em desenvolvimento
-                    de aplicações para dispositivos móveis (Android, iOS), APIs REST, aplicações web, computação gráfica
-                    e criação de dashboards. Habilidoso no uso de framework frontend para desenvolvimento de aplicações
-                    móveis Flutter com a linguagem Dart, framework backend para criação de APIs REST express.js com
-                    JavaScript/TypeScript e Laravel com PHP, desenvolvimento de aplicações web com HTML, CSS e
-                    JavaScript e template engine Blade com PHP e framework frontend Vue, experiência em computação
-                    gráfica e desenvolvimento de jogos com as frameworks SDL, SFML, raylib com linguagens de programação
-                    C/C++. Foco em Design Orientado a Dados com conceitos funcionais de linguagens de programação.</p>
-            </section>
-            <section id="experience">
-                <h3>Experiência</h3>
-                <hr>
-            </section>
-            <section>
-                <h3>Educação</h3>
-                <hr>
-                <h4>Bacharelado em Engenharia de Software</h4>
-                <h5>Universidade Estadual de Ponta Grossa</h5>
-                <span>2018 - 2023</span>
-            </section>
-            <section>
-                <h3>Idiomas</h3>
-                <hr>
-                <p>Inglês Fluente</p>
-            </section>
-        </body>
+    <header>
+      <div class="header-left">
+        <h1>João Kaminoski</h1>
+        <p>Engenheiro de Software</p>
+      </div>
+      <a class="btn-download" href="curriculo.pdf" download="joao_kaminoski_curriculo.pdf">
+        <svg width="14" height="14" viewBox="0 0 24 24">
+          <path d="M12 3v13M5 16l7 7 7-7M3 21h18" />
+        </svg>
+        Baixar currículo
+      </a>
+    </header>
+
+    <main class="viewer">
+      <div class="pdf-wrap">
+        <embed src="curriculo.pdf" type="application/pdf" title="Currículo – João Marcos Kaminoski de Souza" />
+        <div class="fallback">
+          <p>Seu navegador não suporta a exibição de PDFs inline.</p>
+          <p><a href="curriculo.pdf" download>Clique aqui para baixar o currículo.</a></p>
+        </div>
+      </div>
     </main>
-    <script defer src="main.js"></script>
+
+    <footer>
+      <span>curriculo.pdf</span>
+      <span>kamisou.dev@gmail.com</span>
+    </footer>
+
+  </div>
 </body>
 
 </html>
